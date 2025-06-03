@@ -1,5 +1,6 @@
 
 using BestiaryArenaCracker.Api.Infrastructure.DependencyInjection;
+using BestiaryArenaCracker.Repository.Context;
 
 namespace BestiaryArenaCracker.Api;
 
@@ -21,6 +22,8 @@ public class Program
         builder.Services.AddSwaggerGen();
 
         // add dependency
+        builder.AddSqlServerDbContext<ApplicationDbContext>("BestiaryArenaCracker");
+    
         builder.Services.AddProvidersDependency();
         builder.Services.AddServicesDependency();
 

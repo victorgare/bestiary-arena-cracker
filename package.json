@@ -1,0 +1,17 @@
+{
+  "name": "bestiary-arena-cracker",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/victorgare/bestiary-arena-cracker.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/victorgare/bestiary-arena-cracker/issues"
+  },
+  "homepage": "https://github.com/victorgare/bestiary-arena-cracker#readme"
+}

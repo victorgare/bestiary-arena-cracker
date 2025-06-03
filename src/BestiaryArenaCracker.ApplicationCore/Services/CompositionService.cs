@@ -1,10 +1,11 @@
 ﻿using BestiaryArenaCracker.ApplicationCore.Interfaces.Providers;
+using BestiaryArenaCracker.ApplicationCore.Interfaces.Repositories;
 using BestiaryArenaCracker.ApplicationCore.Interfaces.Services;
 using BestiaryArenaCracker.Domain;
 
 namespace BestiaryArenaCracker.ApplicationCore.Services
 {
-    public class CompositionService(IRoomConfigProvider roomConfigProvider) : ICompositionService
+    public class CompositionService(IRoomConfigProvider roomConfigProvider, IApplicationDbContext dbContext) : ICompositionService
     {
         public Task<CompositionResult> FindCompositionAsync()
         {

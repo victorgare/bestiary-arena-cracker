@@ -11,4 +11,10 @@ builder
     .WithReference(bestiaryArenaCrackerSql)
     .WaitFor(bestiaryArenaCrackerSql);
 
+builder
+    .AddProject<Projects.BestiaryArenaCracker_MigrationService>("bestiaryarenacracker-migrationservice")
+    .WithReference(bestiaryArenaCrackerSql)
+    .WaitFor(bestiaryArenaCrackerSql);
+
+
 builder.Build().Run();
