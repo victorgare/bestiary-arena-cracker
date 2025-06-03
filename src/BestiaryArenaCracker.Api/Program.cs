@@ -1,4 +1,6 @@
 
+using BestiaryArenaCracker.Api.Infrastructure.DependencyInjection;
+
 namespace BestiaryArenaCracker.Api;
 
 public class Program
@@ -17,6 +19,9 @@ public class Program
         // add swagger
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
+
+        // add providers dependency
+        builder.Services.AddProvidersDependency();
 
         var app = builder.Build();
 

@@ -9,6 +9,19 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BestiaryArenaCracker.AppHos
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BestiaryArenaCracker.ServiceDefaults", "src\BestiaryArenaCracker.ServiceDefaults\BestiaryArenaCracker.ServiceDefaults.csproj", "{5263F1B6-E207-38CC-F76D-88CB8FC2E14E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BestiaryArenaCracker.Domain", "src\BestiaryArenaCracker.Domain\BestiaryArenaCracker.Domain.csproj", "{D70A92EC-5931-4CF2-A897-C6DEEA6A29EE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BestiaryArenaCracker.ApplicationCore", "src\BestiaryArenaCracker.ApplicationCore\BestiaryArenaCracker.ApplicationCore.csproj", "{9680F68D-6738-4E8E-A206-633589350F58}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BestiaryArenaCracker.ApplicationCore.Tests", "src\BestiaryArenaCracker.ApplicationCore.Tests\BestiaryArenaCracker.ApplicationCore.Tests.csproj", "{1349BE4E-F90F-4BDF-87DC-093B7EE7E306}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}"
+	ProjectSection(SolutionItems) = preProject
+		data\rooms_config.json = data\rooms_config.json
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,9 +40,24 @@ Global
 		{5263F1B6-E207-38CC-F76D-88CB8FC2E14E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5263F1B6-E207-38CC-F76D-88CB8FC2E14E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5263F1B6-E207-38CC-F76D-88CB8FC2E14E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D70A92EC-5931-4CF2-A897-C6DEEA6A29EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D70A92EC-5931-4CF2-A897-C6DEEA6A29EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D70A92EC-5931-4CF2-A897-C6DEEA6A29EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D70A92EC-5931-4CF2-A897-C6DEEA6A29EE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9680F68D-6738-4E8E-A206-633589350F58}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9680F68D-6738-4E8E-A206-633589350F58}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9680F68D-6738-4E8E-A206-633589350F58}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9680F68D-6738-4E8E-A206-633589350F58}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1349BE4E-F90F-4BDF-87DC-093B7EE7E306}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1349BE4E-F90F-4BDF-87DC-093B7EE7E306}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1349BE4E-F90F-4BDF-87DC-093B7EE7E306}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1349BE4E-F90F-4BDF-87DC-093B7EE7E306}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{1349BE4E-F90F-4BDF-87DC-093B7EE7E306} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1096423C-09B2-47E1-8890-1818D8626D0B}

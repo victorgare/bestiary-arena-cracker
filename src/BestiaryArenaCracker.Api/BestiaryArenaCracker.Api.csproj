@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\BestiaryArenaCracker.ApplicationCore\BestiaryArenaCracker.ApplicationCore.csproj" />
     <ProjectReference Include="..\BestiaryArenaCracker.ServiceDefaults\BestiaryArenaCracker.ServiceDefaults.csproj" />
   </ItemGroup>
 

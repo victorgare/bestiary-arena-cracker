@@ -1,7 +1,7 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
 var bestiaryArenaCrackerSql = builder
-    .AddSqlServer("tibia-soul-sql")
+    .AddSqlServer("bestiary-arena-cracker-sql")
     .WithDataVolume()
     .PublishAsConnectionString()
     .AddDatabase("BestiaryArenaCracker");
