@@ -1,0 +1,33 @@
+﻿namespace BestiaryArenaCracker.Domain
+{
+    public enum Equipments
+    {
+        BearSkin,
+        BloodyEdge,
+        BlueRobe,
+        BonelordHelmet,
+        BootsOfHaste,
+        ChainBolter,
+        CranialBasher,
+        DwarvenHelmet,
+        DwarvenLegs,
+        EctoplasmicShield,
+        Epee,
+        FireAxe,
+        GiantSword,
+        GlacialRod,
+        GlassOfGoo,
+        IceRapier,
+        JesterHat,
+        MedusaShield,
+        Ratana,
+        RoyalScaleRobe,
+        RubberCap,
+        SkullHelmet,
+        SkullcrackerArmor,
+        SpringsproutRod,
+        SteelBoots,
+        VampireShield,
+        WandOfDecay
+    }
+}

@@ -10,8 +10,8 @@ namespace BestiaryArenaCracker.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> GetComposition()
         {
-            await compositionService.FindCompositionAsync();
-            return Ok();
+            var result = await compositionService.FindCompositionAsync();
+            return Ok(result);
         }
     }
 }
