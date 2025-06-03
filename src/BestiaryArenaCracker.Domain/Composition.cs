@@ -18,10 +18,10 @@ namespace BestiaryArenaCracker.Domain
         public string ComputeHash()
         {
             // Serialize the object
-            string json = JsonSerializer.Serialize(this, options);
+            var json = JsonSerializer.Serialize(this, options);
 
             // Compute SHA256 hash
-            byte[] hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(json));
+            var hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(json));
             return Convert.ToHexString(hashBytes);
         }
     }
