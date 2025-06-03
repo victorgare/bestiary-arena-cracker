@@ -20,8 +20,9 @@ public class Program
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
 
-        // add providers dependency
+        // add dependency
         builder.Services.AddProvidersDependency();
+        builder.Services.AddServicesDependency();
 
         var app = builder.Build();
 

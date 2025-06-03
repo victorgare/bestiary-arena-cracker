@@ -1,5 +1,6 @@
 using BestiaryArenaCracker.ApplicationCore.Interfaces.Providers;
 using BestiaryArenaCracker.Domain.Room;
+using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -11,7 +12,9 @@ namespace BestiaryArenaCracker.ApplicationCore.Providers
 
         public RoomConfigProvider()
         {
-            var json = System.IO.File.ReadAllText("data/rooms_config.json");
+            var basePath = AppContext.BaseDirectory;
+            var jsonPath = Path.Combine(basePath, "data", "rooms_config.json");
+            var json = System.IO.File.ReadAllText(jsonPath);
             Rooms = JsonSerializer.Deserialize<List<RoomConfig>>(json, options: new()
             {
                 PropertyNameCaseInsensitive = true,
