@@ -10,9 +10,9 @@ namespace BestiaryArenaCracker.Repository.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // Composition table
+            // Compositions table
             migrationBuilder.CreateTable(
-                name: "Composition",
+                name: "Compositions",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false).Annotation("SqlServer:Identity", "1, 1"),
@@ -21,7 +21,7 @@ namespace BestiaryArenaCracker.Repository.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Composition", x => x.Id);
+                    table.PrimaryKey("PK_Compositions", x => x.Id);
                 });
 
             // Composition Monsters
@@ -44,16 +44,16 @@ namespace BestiaryArenaCracker.Repository.Migrations
                 {
                     table.PrimaryKey("PK_CompositionMonsters", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_CompositionMonsters_Composition_CompositionId",
+                        name: "FK_CompositionMonsters_Compositions_CompositionId",
                         column: x => x.CompositionId,
-                        principalTable: "Composition",
+                        principalTable: "Compositions",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             // Composition result
             migrationBuilder.CreateTable(
-                name: "CompositionResult",
+                name: "CompositionResults",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false).Annotation("SqlServer:Identity", "1, 1"),
@@ -64,11 +64,11 @@ namespace BestiaryArenaCracker.Repository.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_CompositionResult", x => x.Id);
+                    table.PrimaryKey("PK_CompositionResults", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_CompositionResult_Composition_CompositionId",
+                        name: "FK_CompositionResults_Compositions_CompositionId",
                         column: x => x.CompositionId,
-                        principalTable: "Composition",
+                        principalTable: "Compositions",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });

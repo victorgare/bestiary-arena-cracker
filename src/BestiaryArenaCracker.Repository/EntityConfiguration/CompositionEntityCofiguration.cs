@@ -8,7 +8,7 @@ namespace BestiaryArenaCracker.Repository.EntityConfiguration
     {
         public void Configure(EntityTypeBuilder<CompositionEntity> builder)
         {
-            builder.ToTable("Composition");
+            builder.ToTable("Compositions");
             builder.HasKey(c => c.Id);
         }
     }

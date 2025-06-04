@@ -2,14 +2,14 @@
 {
     public class CompositionMonstersEntity : IEntity
     {
-        public required int CompositionId { get; set; }
-        public required string Name { get; set; }
-        public required int Hitpoints { get; set; }
-        public required int Attack { get; set; }
-        public required int AbilityPower { get; set; }
-        public required int Armor { get; set; }
-        public required int MagicResistance { get; set; }
-        public required int Level { get; set; }
-        public required int TileLocation { get; set; }
+        public int CompositionId { get; set; }
+        public string Name { get; set; } = null!;
+        public int Hitpoints { get; set; }
+        public int Attack { get; set; }
+        public int AbilityPower { get; set; }
+        public int Armor { get; set; }
+        public int MagicResistance { get; set; }
+        public int Level { get; set; }
+        public int TileLocation { get; set; }
     }
 }

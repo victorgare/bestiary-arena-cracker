@@ -2,9 +2,9 @@
 {
     public class CompositionResultsEntity : IEntity
     {
-        public required int CompositionId { get; set; }
-        public required int Ticks { get; set; }
-        public required int Points { get; set; }
-        public required string Grade { get; set; }
+        public int CompositionId { get; set; }
+        public int Ticks { get; set; }
+        public int Points { get; set; }
+        public string Grade { get; set; } = null!;
     }
 }

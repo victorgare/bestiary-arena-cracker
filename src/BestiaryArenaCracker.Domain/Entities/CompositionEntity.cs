@@ -2,7 +2,7 @@
 {
     public class CompositionEntity : IEntity
     {
-        public required string CompositionHash { get; set; }
-        public required string RoomId { get; set; }
+        public string CompositionHash { get; set; } = null!;
+        public string RoomId { get; set; } = null!;
     }
 }

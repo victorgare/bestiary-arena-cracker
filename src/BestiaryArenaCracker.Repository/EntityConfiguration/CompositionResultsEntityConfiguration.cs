@@ -4,11 +4,11 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace BestiaryArenaCracker.Repository.EntityConfiguration
 {
-    public class CompositionrResultsEntityConfiguration : IEntityTypeConfiguration<CompositionEntity>
+    public class CompositionResultsEntityConfiguration : IEntityTypeConfiguration<CompositionResultsEntity>
     {
-        public void Configure(EntityTypeBuilder<CompositionEntity> builder)
+        public void Configure(EntityTypeBuilder<CompositionResultsEntity> builder)
         {
-            builder.ToTable("CompositionResult");
+            builder.ToTable("CompositionResults");
             builder.HasKey(c => c.Id);
         }
     }
