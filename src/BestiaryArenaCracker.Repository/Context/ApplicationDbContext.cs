@@ -8,8 +8,8 @@ namespace BestiaryArenaCracker.Repository.Context
     {
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(CompositionEntityCofiguration).Assembly);
             base.OnModelCreating(modelBuilder);
-            modelBuilder.ApplyConfigurationsFromAssembly(typeof(RoomEntityCofiguration).Assembly);
         }
     }
 }
