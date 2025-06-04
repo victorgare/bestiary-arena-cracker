@@ -2,6 +2,7 @@ var builder = DistributedApplication.CreateBuilder(args);
 
 var bestiaryArenaCrackerSql = builder
     .AddSqlServer("bestiary-arena-cracker-sql")
+    .WithLifetime(ContainerLifetime.Persistent)
     .WithDataVolume()
     .PublishAsConnectionString()
     .AddDatabase("BestiaryArenaCracker");
