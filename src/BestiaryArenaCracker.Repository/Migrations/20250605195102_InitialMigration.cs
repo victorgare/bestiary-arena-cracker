@@ -25,8 +25,8 @@ namespace BestiaryArenaCracker.Repository.Migrations
                     MagicResistance = table.Column<int>(type: "int", nullable: false),
                     Level = table.Column<int>(type: "int", nullable: false),
                     TileLocation = table.Column<int>(type: "int", nullable: false),
-                    Equipment = table.Column<int>(type: "int", nullable: false),
-                    EquipmentStat = table.Column<int>(type: "int", nullable: false),
+                    Equipment = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    EquipmentStat = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     EquipmentTier = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>

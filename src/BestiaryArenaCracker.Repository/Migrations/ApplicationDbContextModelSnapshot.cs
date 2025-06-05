@@ -65,11 +65,13 @@ namespace BestiaryArenaCracker.Repository.Migrations
                     b.Property<int>("CompositionId")
                         .HasColumnType("int");
 
-                    b.Property<int>("Equipment")
-                        .HasColumnType("int");
+                    b.Property<string>("Equipment")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("EquipmentStat")
-                        .HasColumnType("int");
+                    b.Property<string>("EquipmentStat")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("EquipmentTier")
                         .HasColumnType("int");
