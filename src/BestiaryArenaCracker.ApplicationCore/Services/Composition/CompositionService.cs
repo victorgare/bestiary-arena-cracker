@@ -7,7 +7,7 @@ using BestiaryArenaCracker.Domain.Extensions;
 using BestiaryArenaCracker.Domain.Room;
 using System.Security.Cryptography;
 
-namespace BestiaryArenaCracker.ApplicationCore.Services
+namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
 {
     public class CompositionService(IRoomConfigProvider roomConfigProvider, IApplicationDbContext dbContext) : ICompositionService
     {
@@ -16,15 +16,55 @@ namespace BestiaryArenaCracker.ApplicationCore.Services
         {
             foreach (var room in roomConfigProvider.Rooms)
             {
-                var result = await GetNextOrGenerate(room);
+                var composition = await GetNextOrGenerate(room);
 
-                if (result == null)
+                if (composition == null)
                 {
                     continue;
                 }
 
-                // TODO parse results and return a CompositionResult
-                return null!;
+                // Get monsters for this composition
+                var monsters = dbContext.CompositionMonsters
+                    .Where(m => m.CompositionId == composition.Id)
+                    .ToList();
+
+                // Calculate remaining results
+                var resultsCount = dbContext.CompositionResults
+                    .Count(r => r.CompositionId == composition.Id);
+                var remainingResults = MaxResultsPerComposition - resultsCount;
+
+                // Build the result object
+                var compositionResult = new CompositionResult
+                {
+                    RemainingRuns = MaxResultsPerComposition - resultsCount,
+                    Composition = new Composition
+                    {
+                        Map = room.Name,
+                        Board = [.. monsters.Select(m => new Board
+                        {
+                            Tile = m.TileLocation,
+                            Monster = new Monster
+                            {
+                                Name = m.Name.ToLowerInvariant(),
+                                Hp = m.Hitpoints,
+                                Ad = m.Attack,
+                                Ap = m.AbilityPower,
+                                Armor = m.Armor,
+                                MagicResist = m.MagicResistance,
+                                Level = m.Level
+                            },
+                            Equipment = new Equipment
+                            {
+                                Name = m.Equipment.GetDescription(),
+                                Stat = m.EquipmentStat.GetDescription(),
+                                Tier = m.EquipmentTier
+                            }
+                        })]
+                    }
+                };
+
+                // You can serialize this result to JSON in your controller, or return as-is if using ASP.NET Core's automatic serialization
+                return compositionResult;
             }
 
             return null!;

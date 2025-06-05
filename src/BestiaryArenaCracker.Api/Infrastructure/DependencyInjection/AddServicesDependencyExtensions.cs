@@ -1,5 +1,5 @@
 ﻿using BestiaryArenaCracker.ApplicationCore.Interfaces.Services;
-using BestiaryArenaCracker.ApplicationCore.Services;
+using BestiaryArenaCracker.ApplicationCore.Services.Composition;
 
 namespace BestiaryArenaCracker.Api.Infrastructure.DependencyInjection
 {

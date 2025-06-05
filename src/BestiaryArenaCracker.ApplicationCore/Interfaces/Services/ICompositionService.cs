@@ -1,4 +1,4 @@
-﻿using BestiaryArenaCracker.ApplicationCore.Services;
+﻿using BestiaryArenaCracker.ApplicationCore.Services.Composition;
 using BestiaryArenaCracker.Domain;
 
 namespace BestiaryArenaCracker.ApplicationCore.Interfaces.Services
