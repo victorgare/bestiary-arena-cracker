@@ -4,10 +4,6 @@
     {
         public Actor[]? Actors { get; set; }
         public bool[]? Hitboxes { get; set; }
-        public Dictionary<int, bool> HitboxesDictionary => ToDictionary(Hitboxes).Where(c => !c.Value).ToDictionary();
-
-        public Dictionary<int, Actor> ActorsDictionary => ToDictionary(Actors);
-
         private static Dictionary<int, TSource> ToDictionary<TSource>(TSource[]? source)
         {
             var dict = new Dictionary<int, TSource>();
@@ -23,6 +19,13 @@
                 }
             }
             return dict;
+        }
+
+        public int[] GetFreeTiles()
+        {
+            var hitboxIndices = ToDictionary(Hitboxes).Keys;
+            var actorIndices = ToDictionary(Actors).Keys;
+            return [.. hitboxIndices.Except(actorIndices)];
         }
     }
 }
