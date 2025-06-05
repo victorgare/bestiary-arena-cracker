@@ -2,59 +2,213 @@
 using BestiaryArenaCracker.ApplicationCore.Interfaces.Repositories;
 using BestiaryArenaCracker.ApplicationCore.Interfaces.Services;
 using BestiaryArenaCracker.Domain;
+using BestiaryArenaCracker.Domain.Entities;
+using BestiaryArenaCracker.Domain.Extensions;
+using BestiaryArenaCracker.Domain.Room;
+using System.Security.Cryptography;
 
 namespace BestiaryArenaCracker.ApplicationCore.Services
 {
     public class CompositionService(IRoomConfigProvider roomConfigProvider, IApplicationDbContext dbContext) : ICompositionService
     {
-        public Task<CompositionResult> FindCompositionAsync()
+        private const int MaxResultsPerComposition = 300;
+        public async Task<CompositionResult?> FindCompositionAsync()
         {
-            var firstRoom = roomConfigProvider.Rooms.FirstOrDefault();
-
-            var hitboxes = firstRoom?.File.Data.HitboxesDictionary ?? [];
-            var actors = firstRoom?.File.Data.ActorsDictionary ?? [];
-
-            Composition? composition = null;
-            foreach (var tile in hitboxes)
+            foreach (var room in roomConfigProvider.Rooms)
             {
-                // if there is no actor at this tile we'll use it
-                if (!actors.ContainsKey(tile.Key))
+                var result = await GetNextOrGenerate(room);
+
+                if (result == null)
                 {
-                    foreach (var creature in Enum.GetValues<Creatures>())
+                    continue;
+                }
+
+                // TODO parse results and return a CompositionResult
+                return null!;
+            }
+
+            return null!;
+        }
+
+        public async Task<CompositionEntity?> GetNextOrGenerate(RoomConfig room)
+        {
+            // 1. Try to find a composition for this room with < MaxResultsPerComposition results
+            var composition = dbContext.Compositions
+                .Where(c => c.RoomId == room.Id)
+                .OrderBy(c => c.Id)
+                .FirstOrDefault(c =>
+                    dbContext.CompositionResults.Count(r => r.CompositionId == c.Id) < MaxResultsPerComposition);
+
+            if (composition != null)
+            {
+                return composition;
+            }
+
+            // 2a. Generate all possible valid compositions (combinatorial logic)
+            foreach (var team in GenerateValidTeams(room))
+            {
+                foreach (var positions in GenerateValidPositions(room, team.Count))
+                {
+                    foreach (var equippedTeam in GenerateEquipmentAndStats(team))
                     {
-                        var monster = new Monster(creature);
+                        var hash = ComputeCompositionHash(room, equippedTeam, positions);
 
-                        foreach (var equipment in Enum.GetValues<Equipments>())
+                        // Check if this composition already exists
+                        if (dbContext.Compositions.Any(c => c.CompositionHash == hash && c.RoomId == room.Id))
+                            continue;
+
+                        // 3. Insert new composition and its monsters
+                        var newComposition = new CompositionEntity
                         {
-                            foreach (var stat in Enum.GetValues<EquipmentStat>())
-                            {
-                                var item = new Item(equipment, stat);
+                            CompositionHash = hash,
+                            RoomId = room.Id
+                        };
 
-                                if (composition == null)
-                                {
-                                    return Task.FromResult(new CompositionResult
-                                    {
-                                        Composition = new Composition
-                                        {
-                                            Board = [
-                                               new ()
-                                               {
-                                                   Equipment = item,
-                                                   Monster = monster,
-                                                   Tile = tile.Key
-                                               }
-                                       ]
-                                        }
-                                    });
-                                }
+                        dbContext.Compositions.Add(newComposition);
+                        await dbContext.SaveChangesAsync();
+
+                        var compositionMonsters = new List<CompositionMonstersEntity>();
+                        for (int i = 0; i < equippedTeam.Count; i++)
+                        {
+                            var member = equippedTeam[i];
+                            var monster = new CompositionMonstersEntity
+                            {
+                                CompositionId = newComposition.Id,
+                                Name = member.Name,
+                                Hitpoints = member.Hitpoints,
+                                Attack = member.Attack,
+                                AbilityPower = member.AbilityPower,
+                                Armor = member.Armor,
+                                MagicResistance = member.MagicResistance,
+                                Level = member.Level,
+                                TileLocation = positions[i],
+                                Equipment = member.Equipment,
+                                EquipmentStat = member.EquipmentStat,
+                                EquipmentTier = member.EquipmentTier
+                            };
+
+                            compositionMonsters.Add(monster);
+                        }
+
+                        dbContext.CompositionMonsters.AddRange(compositionMonsters);
+                        await dbContext.SaveChangesAsync();
+
+                        return newComposition;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        // Helper: Generate all valid teams (unique creatures, skip solo-useless)
+        private IEnumerable<List<CompositionMonstersEntity>> GenerateValidTeams(RoomConfig room)
+        {
+            var allCreatures = Enum.GetValues<Creatures>()
+                .Cast<Creatures>()
+                .Where(c => !c.IsSoloUseless() || room.MaxTeamSize > 1)
+                .ToList();
+
+            for (int teamSize = 1; teamSize <= room.MaxTeamSize; teamSize++)
+            {
+                foreach (var team in GetCombinations(allCreatures, teamSize))
+                {
+                    yield return team.Select(c => new CompositionMonstersEntity
+                    {
+                        Name = c.ToString()
+                    }).ToList();
+                }
+            }
+        }
+
+        // Helper: Generate all valid positions for a team
+        private IEnumerable<List<int>> GenerateValidPositions(RoomConfig room, int teamSize)
+        {
+            var freeTiles = room.File.Data.GetFreeTiles();
+            foreach (var positions in GetCombinations(freeTiles, teamSize))
+            {
+                yield return positions.ToList();
+            }
+        }
+
+        // Helper: Generate all equipment/stat combos for a team
+        private static IEnumerable<List<CompositionMonstersEntity>> GenerateEquipmentAndStats(List<CompositionMonstersEntity> team)
+        {
+            var equipment = Enum.GetValues<Equipments>().Cast<Equipments>();
+            var stats = Enum.GetValues<EquipmentStat>().Cast<EquipmentStat>();
+
+            IEnumerable<List<CompositionMonstersEntity>> Expand(int index, List<CompositionMonstersEntity> current)
+            {
+                if (index == team.Count)
+                {
+                    yield return current;
+                    yield break;
+                }
+
+                foreach (var eq in equipment)
+                {
+                    foreach (var stat in stats)
+                    {
+                        var next = new List<CompositionMonstersEntity>(current)
+                        {
+                            new() {
+                                Name = team[index].Name,
+                                Equipment = eq,
+                                EquipmentStat = stat,
+                                Hitpoints = team[index].Hitpoints,
+                                Attack = team[index].Attack,
+                                AbilityPower = team[index].AbilityPower,
+                                Armor = team[index].Armor,
+                                MagicResistance = team[index].MagicResistance,
+                                Level = team[index].Level,
+                                EquipmentTier = team[index].EquipmentTier
                             }
+                        };
+
+                        foreach (var result in Expand(index + 1, next))
+                        {
+                            yield return result;
                         }
                     }
                 }
-
             }
 
-            throw new Exception("No valid composition found. This should not happen.");
+            return Expand(0, []);
+        }
+
+        // Helper: Compute a unique hash for a composition
+        private static string ComputeCompositionHash(RoomConfig room, List<CompositionMonstersEntity> team, List<int> positions)
+        {
+            // Example: hash room id + sorted creature+equipment+stat+position
+            var parts = team
+                .Select((c, i) => $"{c.Name}-{positions[i]}-{c.Equipment}-{c.EquipmentStat}")
+                .OrderBy(s => s);
+            var raw = $"{room.Id}:{string.Join("|", parts)}";
+            var bytes = System.Text.Encoding.UTF8.GetBytes(raw);
+            return Convert.ToBase64String(SHA256.HashData(bytes));
+        }
+
+        // Helper: Get all combinations of a list (n choose k)
+        private IEnumerable<List<T>> GetCombinations<T>(IEnumerable<T> list, int length)
+        {
+            if (length == 0)
+            {
+                yield return new List<T>();
+            }
+            else
+            {
+                int i = 0;
+                foreach (var item in list)
+                {
+                    var remaining = list.Skip(i + 1);
+                    foreach (var combo in GetCombinations(remaining, length - 1))
+                    {
+                        combo.Insert(0, item);
+                        yield return combo;
+                    }
+                    i++;
+                }
+            }
         }
     }
 }
