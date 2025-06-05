@@ -1,6 +1,6 @@
 ﻿namespace BestiaryArenaCracker.Domain.Attributes
 {
-    [AttributeUsage(AttributeTargets.Enum)]
+    [AttributeUsage(AttributeTargets.Field)]
     public class SoloUselessAttribute : Attribute
     {
     }
