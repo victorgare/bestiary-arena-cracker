@@ -11,6 +11,12 @@ namespace BestiaryArenaCracker.Api.Controllers
         public async Task<IActionResult> GetComposition()
         {
             var result = await compositionService.FindCompositionAsync();
+
+            if (result == null)
+            {
+                return NoContent();
+            }
+
             return Ok(result);
         }
     }
