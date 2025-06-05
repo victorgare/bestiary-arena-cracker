@@ -1,4 +1,6 @@
-﻿namespace BestiaryArenaCracker.Domain
+﻿using BestiaryArenaCracker.Domain.Attributes;
+
+namespace BestiaryArenaCracker.Domain
 {
     public enum Creatures
     {
@@ -7,10 +9,12 @@
         BogRaider,
         Bug,
         Cyclops,
+        [SoloUseless]
         Deer,
         DemonSkeleton,
         Dragon,
         DragonLord,
+        [SoloUseless]
         Druid,
         Dwarf,
         DwarfGeomancer,
@@ -23,6 +27,7 @@
         FireElemental,
         Firestarter,
         FrostTroll,
+        [SoloUseless]
         Ghost,
         Ghoul,
         Goblin,
@@ -48,6 +53,7 @@
         Rorc,
         Rotworm,
         Scorpion,
+        [SoloUseless]
         Sheep,
         Skeleton,
         Slime,
