@@ -23,7 +23,7 @@
 
         public int[] GetFreeTiles()
         {
-            var hitboxIndices = ToDictionary(Hitboxes).Keys;
+            var hitboxIndices = ToDictionary(Hitboxes).Where(c => !c.Value).ToDictionary().Keys;
             var actorIndices = ToDictionary(Actors).Keys;
             return [.. hitboxIndices.Except(actorIndices)];
         }
