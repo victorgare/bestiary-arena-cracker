@@ -11,5 +11,8 @@
         public int MagicResistance { get; set; }
         public int Level { get; set; }
         public int TileLocation { get; set; }
+        public Equipments Equipment { get; set; }
+        public EquipmentStat EquipmentStat { get; set; }
+        public int EquipmentTier { get; set; }
     }
 }

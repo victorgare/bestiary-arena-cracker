@@ -8,14 +8,13 @@ var bestiaryArenaCrackerSql = builder
     .AddDatabase("BestiaryArenaCracker");
 
 builder
-    .AddProject<Projects.BestiaryArenaCracker_Api>("bestiaryarenacracker-api")
-    .WithReference(bestiaryArenaCrackerSql)
-    .WaitFor(bestiaryArenaCrackerSql);
-
-builder
     .AddProject<Projects.BestiaryArenaCracker_MigrationService>("bestiaryarenacracker-migrationservice")
     .WithReference(bestiaryArenaCrackerSql)
     .WaitFor(bestiaryArenaCrackerSql);
 
+builder
+    .AddProject<Projects.BestiaryArenaCracker_Api>("bestiaryarenacracker-api")
+    .WithReference(bestiaryArenaCrackerSql)
+    .WaitFor(bestiaryArenaCrackerSql);
 
 builder.Build().Run();

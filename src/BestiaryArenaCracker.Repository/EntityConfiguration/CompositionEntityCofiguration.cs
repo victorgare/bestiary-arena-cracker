@@ -10,6 +10,7 @@ namespace BestiaryArenaCracker.Repository.EntityConfiguration
         {
             builder.ToTable("Compositions");
             builder.HasKey(c => c.Id);
+            builder.HasIndex(c=> c.CompositionHash).IsUnique();
         }
     }
 }

@@ -37,12 +37,12 @@ namespace BestiaryArenaCracker.ApplicationCore.Services
                                         Composition = new Composition
                                         {
                                             Board = [
-                                           new ()
-                                           {
-                                               Equipment = item,
-                                               Monster = monster,
-                                               Tile = tile.Key
-                                           }
+                                               new ()
+                                               {
+                                                   Equipment = item,
+                                                   Monster = monster,
+                                                   Tile = tile.Key
+                                               }
                                        ]
                                         }
                                     });
