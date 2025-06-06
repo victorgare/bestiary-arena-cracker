@@ -211,7 +211,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
         // Helper: Compute a unique hash for a composition
         private static string ComputeCompositionHash(RoomConfig room, List<CompositionMonstersEntity> team, List<int> positions)
         {
-            // Example: hash room id + sorted creature+equipment+stat+position
+            // Example: hash room id + sorted creature+creature stats+equipment+stat+position
             var parts = team
                 .Select((c, i) => $"{c.Name}-{positions[i]}-{c.Hitpoints}-{c.Attack}-{c.AbilityPower}-{c.Armor}-{c.MagicResistance}-{c.Level}-{c.Equipment}-{c.EquipmentStat}-{c.EquipmentTier}")
                 .OrderBy(s => s);
