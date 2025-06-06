@@ -23,9 +23,10 @@ public class Program
 
         // add dependency
         builder.AddSqlServerDbContext<ApplicationDbContext>("BestiaryArenaCracker");
-    
+
         builder.Services.AddProvidersDependency();
         builder.Services.AddServicesDependency();
+        builder.Services.AddRepositoriesDependency();
 
         var app = builder.Build();
 

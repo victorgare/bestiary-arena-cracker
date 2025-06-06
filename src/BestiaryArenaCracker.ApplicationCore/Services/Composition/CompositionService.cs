@@ -9,7 +9,7 @@ using System.Security.Cryptography;
 
 namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
 {
-    public class CompositionService(IRoomConfigProvider roomConfigProvider, IApplicationDbContext dbContext) : ICompositionService
+    public class CompositionService(IRoomConfigProvider roomConfigProvider, ICompositionRepository compositionRepository) : ICompositionService
     {
         private const int MaxResultsPerComposition = 300;
         public async Task<CompositionResult?> FindCompositionAsync()
@@ -24,18 +24,16 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
                 }
 
                 // Get monsters for this composition
-                var monsters = dbContext.CompositionMonsters
-                    .Where(m => m.CompositionId == composition.Id)
-                    .ToList();
+                var monsters = await compositionRepository.GetMonstersByCompositionIdAsync(composition.Id);
 
                 // Calculate remaining results
-                var resultsCount = dbContext.CompositionResults
-                    .Count(r => r.CompositionId == composition.Id);
+                var resultsCount = await compositionRepository.GetResultsCountAsync(composition.Id);
                 var remainingResults = MaxResultsPerComposition - resultsCount;
 
                 // Build the result object
                 var compositionResult = new CompositionResult
                 {
+                    CompositionId = composition.Id,
                     RemainingRuns = MaxResultsPerComposition - resultsCount,
                     Composition = new Composition
                     {
@@ -73,11 +71,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
         public async Task<CompositionEntity?> GetNextOrGenerate(RoomConfig room)
         {
             // 1. Try to find a composition for this room with < MaxResultsPerComposition results
-            var composition = dbContext.Compositions
-                .Where(c => c.RoomId == room.Id)
-                .OrderBy(c => c.Id)
-                .FirstOrDefault(c =>
-                    dbContext.CompositionResults.Count(r => r.CompositionId == c.Id) < MaxResultsPerComposition);
+            var composition = await compositionRepository.GetNextAvailableCompositionAsync(room.Id, MaxResultsPerComposition);
 
             if (composition != null)
             {
@@ -94,7 +88,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
                         var hash = ComputeCompositionHash(room, equippedTeam, positions);
 
                         // Check if this composition already exists
-                        if (dbContext.Compositions.Any(c => c.CompositionHash == hash && c.RoomId == room.Id))
+                        if (await compositionRepository.CompositionExistsAsync(room.Id, hash))
                             continue;
 
                         // 3. Insert new composition and its monsters
@@ -104,8 +98,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
                             RoomId = room.Id
                         };
 
-                        dbContext.Compositions.Add(newComposition);
-                        await dbContext.SaveChangesAsync();
+                        await compositionRepository.AddCompositionAsync(newComposition);
 
                         var compositionMonsters = new List<CompositionMonstersEntity>();
                         for (int i = 0; i < equippedTeam.Count; i++)
@@ -130,8 +123,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
                             compositionMonsters.Add(monster);
                         }
 
-                        dbContext.CompositionMonsters.AddRange(compositionMonsters);
-                        await dbContext.SaveChangesAsync();
+                        await compositionRepository.AddMonstersAsync(newComposition.Id, compositionMonsters);
 
                         return newComposition;
                     }
