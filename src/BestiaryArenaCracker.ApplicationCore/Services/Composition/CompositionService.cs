@@ -213,7 +213,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
         {
             // Example: hash room id + sorted creature+equipment+stat+position
             var parts = team
-                .Select((c, i) => $"{c.Name}-{positions[i]}-{c.Equipment}-{c.EquipmentStat}")
+                .Select((c, i) => $"{c.Name}-{positions[i]}-{c.Hitpoints}-{c.Attack}-{c.AbilityPower}-{c.Armor}-{c.MagicResistance}-{c.Level}-{c.Equipment}-{c.EquipmentStat}-{c.EquipmentTier}")
                 .OrderBy(s => s);
             var raw = $"{room.Id}:{string.Join("|", parts)}";
             var bytes = System.Text.Encoding.UTF8.GetBytes(raw);
