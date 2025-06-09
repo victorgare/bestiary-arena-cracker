@@ -43,7 +43,9 @@ namespace BestiaryArenaCracker.Repository.Migrations
                     CompositionId = table.Column<int>(type: "int", nullable: false),
                     Ticks = table.Column<int>(type: "int", nullable: false),
                     Points = table.Column<int>(type: "int", nullable: false),
-                    Grade = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Grade = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Victory = table.Column<bool>(type: "bit", nullable: false),
+                    Seed = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {

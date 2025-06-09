@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BestiaryArenaCracker.Repository.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250605195102_InitialMigration")]
+    [Migration("20250609173744_InitialMigration")]
     partial class InitialMigration
     {
         /// <inheritdoc />
@@ -118,8 +118,15 @@ namespace BestiaryArenaCracker.Repository.Migrations
                     b.Property<int>("Points")
                         .HasColumnType("int");
 
+                    b.Property<string>("Seed")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("Ticks")
                         .HasColumnType("int");
+
+                    b.Property<bool>("Victory")
+                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 

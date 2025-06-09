@@ -9,7 +9,7 @@
         public int AbilityPower { get; set; } = 20;
         public int Armor { get; set; } = 20;
         public int MagicResistance { get; set; } = 20;
-        public int Level { get; set; } = 20;
+        public int Level { get; set; } = 50;
         public int TileLocation { get; set; }
         public Equipments Equipment { get; set; }
         public EquipmentStat EquipmentStat { get; set; }
