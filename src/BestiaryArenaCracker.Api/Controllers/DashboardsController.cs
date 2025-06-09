@@ -1,4 +1,4 @@
-﻿using BestiaryArenaCracker.ApplicationCore.Interfaces.Providers;
+﻿using BestiaryArenaCracker.ApplicationCore.Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BestiaryArenaCracker.Api.Controllers
@@ -6,11 +6,13 @@ namespace BestiaryArenaCracker.Api.Controllers
 
     [ApiController]
     [Route("[controller]")]
-    public class DashboardsController(IRoomConfigProvider roomConfigProvider) : ControllerBase
+    public class DashboardsController(IDashboardService dashboardService) : ControllerBase
     {
-        public IActionResult Index()
+        [HttpGet("summary")]
+        public async Task<IActionResult> GetSymmary()
         {
-            return Ok();
+            var dashboard = await dashboardService.GetSummaryAsync();
+            return Ok(dashboard);
         }
     }
 }

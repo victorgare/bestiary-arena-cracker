@@ -21,7 +21,7 @@ var bestiaryArenaCrackerApi = builder
 builder.
     AddNpmApp("bestiary-arena-cracker-ui", "../BestiaryArenaCracker.UI", "dev")
     .WithReference(bestiaryArenaCrackerApi)
-    .WithHttpEndpoint(env: "PORT")
+    .WithHttpEndpoint(env: "PORT", port: 3000)
     .WithExternalHttpEndpoints()
     .PublishAsDockerFile();
 

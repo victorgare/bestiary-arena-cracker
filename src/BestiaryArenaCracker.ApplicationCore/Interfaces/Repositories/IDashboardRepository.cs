@@ -1,8 +1,8 @@
 ﻿using BestiaryArenaCracker.Domain.Dashboards;
 
-namespace BestiaryArenaCracker.ApplicationCore.Interfaces.Services
+namespace BestiaryArenaCracker.ApplicationCore.Interfaces.Repositories
 {
-    public interface IDashboardService
+    public interface IDashboardRepository
     {
         Task<SummaryDashboard[]> GetSummaryAsync();
     }

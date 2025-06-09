@@ -8,6 +8,7 @@ namespace BestiaryArenaCracker.Api.Infrastructure.DependencyInjection
         public static void AddRepositoriesDependency(this IServiceCollection services)
         {
             services.AddTransient<ICompositionRepository, CompositionRepository>();
+            services.AddTransient<IDashboardRepository, DashboardRepository>();
         }
     }
 }
