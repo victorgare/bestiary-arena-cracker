@@ -33,7 +33,7 @@ public class Program
         {
             options.AddDefaultPolicy(policy =>
             {
-                policy.WithOrigins("https://bestiaryarena.com")
+                policy.WithOrigins("https://bestiaryarena.com", "http://localhost:3000")
                       .AllowAnyHeader()
                       .AllowAnyMethod();
             });
