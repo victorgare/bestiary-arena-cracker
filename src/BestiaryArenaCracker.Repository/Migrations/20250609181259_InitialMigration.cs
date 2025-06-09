@@ -45,7 +45,7 @@ namespace BestiaryArenaCracker.Repository.Migrations
                     Points = table.Column<int>(type: "int", nullable: false),
                     Grade = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Victory = table.Column<bool>(type: "bit", nullable: false),
-                    Seed = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Seed = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {

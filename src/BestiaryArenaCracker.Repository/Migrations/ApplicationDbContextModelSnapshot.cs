@@ -115,9 +115,8 @@ namespace BestiaryArenaCracker.Repository.Migrations
                     b.Property<int>("Points")
                         .HasColumnType("int");
 
-                    b.Property<string>("Seed")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("Seed")
+                        .HasColumnType("int");
 
                     b.Property<int>("Ticks")
                         .HasColumnType("int");
