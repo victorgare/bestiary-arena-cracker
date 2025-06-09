@@ -247,5 +247,47 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
         {
             return compositionRepository.AddResults(compositionId, compositions);
         }
+
+        public Task<int> CalculatePossibleCompositions(RoomConfig room)
+        {
+            var allCreatures = Enum.GetValues<Creatures>()
+                   .Cast<Creatures>()
+                   .Where(c => !c.IsSoloUseless() || room.MaxTeamSize > 1)
+                   .ToList();
+
+            var freeTiles = room.File.Data.GetFreeTiles();
+            int equipmentCount = Enum.GetValues<Equipments>().Length;
+            int statCount = Enum.GetValues<EquipmentStat>().Length;
+
+            int total = 0;
+
+            for (int teamSize = 1; teamSize <= room.MaxTeamSize; teamSize++)
+            {
+                // Number of unique teams (n choose k)
+                int teamComb = Combinations(allCreatures.Count, teamSize);
+
+                // Number of unique positions (freeTiles choose teamSize)
+                int posComb = Combinations(freeTiles.Length, teamSize);
+
+                // Number of equipment/stat combos per team
+                int equipComb = (int)Math.Pow(equipmentCount * statCount, teamSize);
+
+                total += teamComb * posComb * equipComb;
+            }
+
+            return Task.FromResult(total);
+        }
+
+        private static int Combinations(int n, int k)
+        {
+            if (k > n) return 0;
+            if (k == 0 || k == n) return 1;
+            long result = 1;
+            for (int i = 1; i <= k; i++)
+            {
+                result = result * (n - (k - i)) / i;
+            }
+            return (int)result;
+        }
     }
 }
