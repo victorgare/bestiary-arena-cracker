@@ -7,6 +7,6 @@
         public int Points { get; set; }
         public string Grade { get; set; } = null!;
         public bool Victory { get; set; } = false;
-        public string Seed { get; set; } = null!;
+        public int Seed { get; set; }
     }
 }

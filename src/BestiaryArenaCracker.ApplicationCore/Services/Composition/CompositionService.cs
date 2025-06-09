@@ -242,5 +242,10 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
                 }
             }
         }
+
+        public Task AddResults(int compositionId, CompositionResultsEntity[] compositions)
+        {
+            return compositionRepository.AddResults(compositionId, compositions);
+        }
     }
 }

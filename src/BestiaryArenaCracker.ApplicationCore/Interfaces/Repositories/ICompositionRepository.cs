@@ -10,5 +10,6 @@ namespace BestiaryArenaCracker.ApplicationCore.Interfaces.Repositories
         Task AddMonstersAsync(int compositionId, IEnumerable<CompositionMonstersEntity> monsters);
         Task<CompositionMonstersEntity[]> GetMonstersByCompositionIdAsync(int compositionId);
         Task<int> GetResultsCountAsync(int compositionId);
+        Task AddResults(int compositionId, CompositionResultsEntity[] results);
     }
 }
