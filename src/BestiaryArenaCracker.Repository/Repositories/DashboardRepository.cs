@@ -37,8 +37,7 @@ namespace BestiaryArenaCracker.Repository.Repositories
                         select new SummaryDashboard
                         {
                             RoomId = results.RoomId,
-                            TotalResults = results.TotalResults,
-                            TotalCompositions = comps.TotalCompositions,
+                            TotalResults = comps.TotalCompositions,
                             Ticks = results.Ticks,
                             Points = results.Points,
                             Grade = results.Grade
