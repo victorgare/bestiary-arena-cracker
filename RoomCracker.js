@@ -59,7 +59,7 @@ function enableTurbo(speedupFactor = defaultConfig.speedupFactor) {
 
   // Clean up any existing subscription
   if (defaultConfig.turboSubscription) {
-    defaultConfig.turboSubscription();
+    defaultConfig.turboSubscription.unsubscribe();
     defaultConfig.turboSubscription = null;
   }
 
@@ -99,6 +99,30 @@ function enableTurbo(speedupFactor = defaultConfig.speedupFactor) {
 
   defaultConfig.turboActive = true;
   console.log(`Turbo mode enabled (${speedupFactor}x)`);
+}
+
+function disableTurbo() {
+  if (!defaultConfig.turboActive) return;
+
+  // Remove the subscription to restore original behavior
+  // Clean up any existing subscription
+  if (defaultConfig.turboSubscription) {
+    defaultConfig.turboSubscription.unsubscribe();
+    defaultConfig.turboSubscription = null;
+  }
+
+  // Reset the current game's tick interval if it exists
+  if (globalThis.state?.board?.getSnapshot()?.context?.world?.tickEngine) {
+    const tickEngine =
+      globalThis.state.board.getSnapshot().context.world.tickEngine;
+    console.log(
+      `Resetting tick interval to default (${DEFAULT_TICK_INTERVAL_MS}ms)`
+    );
+    tickEngine.setTickInterval(DEFAULT_TICK_INTERVAL_MS);
+  }
+
+  defaultConfig.turboActive = false;
+  console.log("Turbo mode disabled");
 }
 
 // Sleep function for async operations
@@ -216,6 +240,9 @@ async function startCracking() {
       updateButtonState();
     }
   } while (defaultConfig.enabled);
+
+  disableTurbo();
+  setGameBoardDisplay(true);
 }
 
 // Add the performance mode toggle button
