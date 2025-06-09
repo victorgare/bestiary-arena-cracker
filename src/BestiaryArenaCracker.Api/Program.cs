@@ -28,6 +28,17 @@ public class Program
         builder.Services.AddServicesDependency();
         builder.Services.AddRepositoriesDependency();
 
+        // enable CORS
+        builder.Services.AddCors(options =>
+        {
+            options.AddDefaultPolicy(policy =>
+            {
+                policy.WithOrigins("https://bestiaryarena.com")
+                      .AllowAnyHeader()
+                      .AllowAnyMethod();
+            });
+        });
+
         var app = builder.Build();
 
         app.MapDefaultEndpoints();
@@ -46,6 +57,7 @@ public class Program
 
 
         app.MapControllers();
+        app.UseCors();
 
         app.Run();
     }
