@@ -1,8 +1,18 @@
+@import url('https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Inter:wght@400;700&display=swap');
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-bg: #232026;
+  --color-panel: #2c2930;
+  --color-card: #35323a;
+  --color-border: #6b5c3e;
+  --color-gold: #e6c15b;
+  --color-gold-dark: #b89c3a;
+  --color-text: #f5f5f5;
+  --color-muted: #b0aeb8;
+  --color-input: #18151a;
+  --color-btn: #3e3b44;
+  --color-btn-hover: #e6c15b;
 }
 
 @theme inline {
@@ -20,7 +30,34 @@
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+}
+
+h1, h2, h3, .heading {
+  font-family: var(--font-heading);
+  color: var(--color-gold);
+  letter-spacing: 0.04em;
+}
+
+.card {
+  background: var(--color-card);
+  border: 2px solid var(--color-gold);
+  border-radius: 1rem;
+  box-shadow: 0 4px 24px 0 #000a;
+  padding: 2rem;
+}
+
+.btn {
+  background: var(--color-gold);
+  color: #18151a;
+  border-radius: 9999px;
+  padding: 0.75rem 2rem;
+  font-weight: bold;
+  box-shadow: 0 2px 8px 0 #0006;
+  transition: background 0.2s;
+}
+.btn:hover {
+  background: #f7e08c;
 }

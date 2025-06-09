@@ -12,9 +12,17 @@ builder
     .WithReference(bestiaryArenaCrackerSql)
     .WaitFor(bestiaryArenaCrackerSql);
 
-builder
+var bestiaryArenaCrackerApi = builder
     .AddProject<Projects.BestiaryArenaCracker_Api>("bestiaryarenacracker-api")
     .WithReference(bestiaryArenaCrackerSql)
     .WaitFor(bestiaryArenaCrackerSql);
+
+
+builder.
+    AddNpmApp("bestiary-arena-cracker-ui", "../BestiaryArenaCracker.UI", "dev")
+    .WithReference(bestiaryArenaCrackerApi)
+    .WithHttpEndpoint(env: "PORT")
+    .WithExternalHttpEndpoints()
+    .PublishAsDockerFile();
 
 builder.Build().Run();
