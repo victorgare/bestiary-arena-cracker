@@ -14,7 +14,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Dashboards
         {
             var roomsSummary = await dashboardRepository.GetSummaryAsync();
 
-            var result = new List<SummaryDashboard>(roomsSummary);
+            var result = new List<SummaryDashboard>();
             foreach (var roomConfig in roomConfigProvider.Rooms)
             {
                 var roomSummary = roomsSummary.FirstOrDefault(x => x.RoomId == roomConfig.Id);
