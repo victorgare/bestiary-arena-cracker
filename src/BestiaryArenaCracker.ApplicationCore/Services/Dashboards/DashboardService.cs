@@ -14,15 +14,33 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Dashboards
         {
             var roomsSummary = await dashboardRepository.GetSummaryAsync();
 
-            foreach (var roomSummary in roomsSummary)
+            var result = new List<SummaryDashboard>(roomsSummary);
+            foreach (var roomConfig in roomConfigProvider.Rooms)
             {
-                var room = roomConfigProvider.Rooms.FirstOrDefault(x => x.Id == roomSummary.RoomId);
+                var roomSummary = roomsSummary.FirstOrDefault(x => x.RoomId == roomConfig.Id);
 
-                roomSummary.RoomName = room!.Name;
-                roomSummary.TotalCompositions = await compositionService.CalculatePossibleCompositions(room);
+                if (roomSummary != null)
+                {
+                    roomSummary.RoomName = roomConfig.Name;
+                }
+                else
+                {
+                    roomSummary = new SummaryDashboard
+                    {
+                        RoomId = roomConfig.Id,
+                        RoomName = roomConfig.Name,
+                        TotalResults = 0,
+                        Ticks = 0,
+                        Points = 0,
+                        Grade = "F"
+                    };
+                }
+
+                roomSummary.TotalCompositions = await compositionService.CalculatePossibleCompositions(roomConfig);
+                result.Add(roomSummary);
             }
 
-            return roomsSummary;
+            return [.. result];
         }
     }
 }

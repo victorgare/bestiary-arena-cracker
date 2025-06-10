@@ -248,7 +248,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
             return compositionRepository.AddResults(compositionId, compositions);
         }
 
-        public Task<int> CalculatePossibleCompositions(RoomConfig room)
+        public Task<Int128> CalculatePossibleCompositions(RoomConfig room)
         {
             var allCreatures = Enum.GetValues<Creatures>()
                    .Cast<Creatures>()
@@ -259,18 +259,18 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
             int equipmentCount = Enum.GetValues<Equipments>().Length;
             int statCount = Enum.GetValues<EquipmentStat>().Length;
 
-            int total = 0;
+            Int128 total = 0;
 
             for (int teamSize = 1; teamSize <= room.MaxTeamSize; teamSize++)
             {
                 // Number of unique teams (n choose k)
-                int teamComb = Combinations(allCreatures.Count, teamSize);
+                var teamComb = Combinations(allCreatures.Count, teamSize);
 
                 // Number of unique positions (freeTiles choose teamSize)
-                int posComb = Combinations(freeTiles.Length, teamSize);
+                var posComb = Combinations(freeTiles.Length, teamSize);
 
                 // Number of equipment/stat combos per team
-                int equipComb = (int)Math.Pow(equipmentCount * statCount, teamSize);
+                var equipComb = (Int128)Math.Pow(equipmentCount * statCount, teamSize);
 
                 total += teamComb * posComb * equipComb;
             }
@@ -278,7 +278,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
             return Task.FromResult(total);
         }
 
-        private static int Combinations(int n, int k)
+        private static Int128 Combinations(int n, int k)
         {
             if (k > n) return 0;
             if (k == 0 || k == n) return 1;

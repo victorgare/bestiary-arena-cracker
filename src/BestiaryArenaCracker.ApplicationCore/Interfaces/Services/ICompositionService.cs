@@ -9,6 +9,6 @@ namespace BestiaryArenaCracker.ApplicationCore.Interfaces.Services
         Task<CompositionResult?> FindCompositionAsync();
         Task AddResults(int compositionId, CompositionResultsEntity[] compositions);
 
-        Task<int> CalculatePossibleCompositions(RoomConfig room);
+        Task<Int128> CalculatePossibleCompositions(RoomConfig room);
     }
 }

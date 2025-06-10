@@ -21,6 +21,7 @@ namespace BestiaryArenaCracker.Repository.Repositories
             var resultsPerRoom = from composition in dbContext.Compositions
                                  join result in dbContext.CompositionResults
                                     on composition.Id equals result.CompositionId
+                                 where result.Victory
                                  group result by composition.RoomId into g
                                  select new
                                  {
@@ -28,7 +29,7 @@ namespace BestiaryArenaCracker.Repository.Repositories
                                      TotalResults = g.Count(),
                                      Ticks = g.OrderBy(r => r.Ticks).Select(r => r.Ticks).FirstOrDefault(),
                                      Points = g.Max(r => r.Points),
-                                     Grade = g.OrderByDescending(r => r.Points).Select(r => r.Grade).FirstOrDefault() ?? ""
+                                     Grade = g.OrderByDescending(r => r.Points).Select(r => r.Grade).FirstOrDefault() ?? "F"
                                  };
 
             // Join the two subqueries
