@@ -11,7 +11,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
 {
     public class CompositionService(IRoomConfigProvider roomConfigProvider, ICompositionRepository compositionRepository) : ICompositionService
     {
-        private const int MaxResultsPerComposition = 300;
+        private const int MaxResultsPerComposition = 50;
         public async Task<CompositionResult?> FindCompositionAsync()
         {
             foreach (var room in roomConfigProvider.Rooms)
