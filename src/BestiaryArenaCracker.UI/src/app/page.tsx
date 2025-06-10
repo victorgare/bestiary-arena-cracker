@@ -1,4 +1,5 @@
 "use client";
+import { CrackerIcon } from "@/components/atom/Icons/CrackerIcon ";
 import { DashboardList } from "@/components/DashboardSummary/DashboardList";
 import { DashboardSummary } from "@/components/DashboardSummary/Model/DashboardSummary";
 import { useEffect, useState } from "react";
@@ -23,10 +24,13 @@ export default function Home() {
     >
       <main className="flex flex-col gap-10 items-center w-full max-w-6xl mx-auto">
         <h1
-          className="heading text-4xl mb-4"
+          className="heading text-4xl mb-4 flex items-center gap-2"
           style={{ color: "var(--color-gold)" }}
         >
-          Bestiary Arena Cracker
+          Bestiary Arena{" "}
+          <span className="inline-block align-middle">
+            <CrackerIcon />
+          </span>
         </h1>
         <div
           className="card w-full flex flex-col items-center gap-6"
