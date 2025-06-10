@@ -11,7 +11,7 @@ export default function RoomDetails() {
       style={{ background: "var(--color-bg)", color: "var(--color-text)" }}
     >
       <div
-        className="w-full max-w-2xl rounded-xl p-8"
+        className="w-full max-w-6xl rounded-xl p-8"
         style={{
           background: "var(--color-card)",
           border: "2px solid var(--color-border)",
