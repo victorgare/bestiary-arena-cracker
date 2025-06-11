@@ -1,5 +1,6 @@
 "use client";
 import { CrackerIcon } from "@/components/atom/Icons/CrackerIcon ";
+import { ProgressBar } from "@/components/atom/ProgressBar";
 import { DashboardList } from "@/components/DashboardSummary/DashboardList";
 import { DashboardSummary } from "@/components/DashboardSummary/Model/DashboardSummary";
 import { useEffect, useState } from "react";
@@ -17,6 +18,17 @@ export default function Home() {
       .finally(() => setLoading(false));
   }, [baseUrl]);
 
+  // Calculate overall progress
+  const totalRuns = summaries.reduce((acc, s) => acc + s.totalResults, 0);
+  const totalPossibilities = summaries.reduce(
+    (acc, s) => acc + s.totalCompositions,
+    0
+  );
+  const percent =
+    totalPossibilities > 0
+      ? Math.round((totalRuns / totalPossibilities) * 100)
+      : 0;
+
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-between py-12 px-4"
@@ -32,6 +44,29 @@ export default function Home() {
             <CrackerIcon />
           </span>
         </h1>
+        {/* Overall Progress */}
+        <div
+          className="w-full max-w-2xl mb-6 rounded-xl shadow"
+          style={{
+            background: "var(--color-panel)",
+            border: "2px solid var(--color-border)",
+            padding: "1.5rem 2rem",
+          }}
+        >
+          <h2 className="text-lg mb-2" style={{ color: "var(--color-gold)" }}>
+            Overall Progress
+          </h2>
+          <ProgressBar
+            label="Total Runs"
+            value={totalRuns}
+            max={totalPossibilities}
+            percent={percent}
+            color="var(--color-gold)"
+          />
+          <div className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
+            {totalRuns} / {totalPossibilities} ({percent}%)
+          </div>
+        </div>
         <div
           className="card w-full flex flex-col items-center gap-6"
           style={{
