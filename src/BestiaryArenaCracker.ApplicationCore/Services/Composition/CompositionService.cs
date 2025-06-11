@@ -2,6 +2,7 @@
 using BestiaryArenaCracker.ApplicationCore.Interfaces.Repositories;
 using BestiaryArenaCracker.ApplicationCore.Interfaces.Services;
 using BestiaryArenaCracker.Domain;
+using BestiaryArenaCracker.Domain.Composition;
 using BestiaryArenaCracker.Domain.Entities;
 using BestiaryArenaCracker.Domain.Extensions;
 using BestiaryArenaCracker.Domain.Room;
@@ -28,7 +29,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
                 {
                     CompositionId = composition.Id,
                     RemainingRuns = MaxResultsPerComposition - resultsCount,
-                    Composition = new Composition
+                    Composition = new Domain.Composition.Composition
                     {
                         Map = room.Name,
                         Board = [.. monsters.Select(m => new Board

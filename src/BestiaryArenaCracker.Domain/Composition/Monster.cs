@@ -1,4 +1,4 @@
-﻿namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
+﻿namespace BestiaryArenaCracker.Domain.Composition
 {
     public class Monster
     {
