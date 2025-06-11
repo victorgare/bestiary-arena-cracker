@@ -7,8 +7,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Dashboards
 {
     public class DashboardService(
         IRoomConfigProvider roomConfigProvider,
-        IDashboardRepository dashboardRepository,
-        ICompositionService compositionService) : IDashboardService
+        IDashboardRepository dashboardRepository) : IDashboardService
     {
         public Task<RoomDetailsDashboard> GetRoomDetailsAsync(string roomId)
         {
@@ -20,7 +19,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Dashboards
             var roomsSummary = await dashboardRepository.GetSummaryAsync();
 
             var result = new List<SummaryDashboard>();
-            foreach (var roomConfig in roomConfigProvider.Rooms)
+            foreach (var roomConfig in roomConfigProvider.AllRooms)
             {
                 var roomSummary = roomsSummary.FirstOrDefault(x => x.RoomId == roomConfig.Id);
 
@@ -42,7 +41,6 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Dashboards
                     };
                 }
 
-                //roomSummary.TotalCompositions = await compositionService.CalculatePossibleCompositions(roomConfig);
                 result.Add(roomSummary);
             }
 

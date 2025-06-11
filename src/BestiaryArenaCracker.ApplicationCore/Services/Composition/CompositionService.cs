@@ -15,7 +15,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
     {
         public async Task<CompositionResult?> FindCompositionAsync()
         {
-            foreach (var room in roomConfigProvider.Rooms)
+            foreach (var room in roomConfigProvider.AllRooms)
             {
                 var composition = await compositionRepository.GetNextAvailableCompositionAsync(room.Id, ConfigurationConstants.DefaultMinimumCompositionRuns);
 
