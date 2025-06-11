@@ -1,0 +1,7 @@
+@BestiaryArenaCracker.Api_HostAddress = http://localhost:5292
+@roomId = "rkswrs"
+
+GET {{BestiaryArenaCracker.Api_HostAddress}}/dashboards/room/{{roomId}}/details
+Accept: application/json
+
+###

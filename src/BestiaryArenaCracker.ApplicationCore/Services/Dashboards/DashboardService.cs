@@ -10,6 +10,11 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Dashboards
         IDashboardRepository dashboardRepository,
         ICompositionService compositionService) : IDashboardService
     {
+        public Task<RoomDetailsDashboard> GetRoomDetailsAsync(string roomId)
+        {
+            return dashboardRepository.GetRoomDetailsAsync(roomId);
+        }
+
         public async Task<SummaryDashboard[]> GetSummaryAsync()
         {
             var roomsSummary = await dashboardRepository.GetSummaryAsync();

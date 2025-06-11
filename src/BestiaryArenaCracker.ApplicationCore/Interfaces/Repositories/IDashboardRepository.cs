@@ -5,5 +5,6 @@ namespace BestiaryArenaCracker.ApplicationCore.Interfaces.Repositories
     public interface IDashboardRepository
     {
         Task<SummaryDashboard[]> GetSummaryAsync();
+        Task<RoomDetailsDashboard> GetRoomDetailsAsync(string roomId);
     }
 }

@@ -14,5 +14,12 @@ namespace BestiaryArenaCracker.Api.Controllers
             var dashboard = await dashboardService.GetSummaryAsync();
             return Ok(dashboard);
         }
+
+        [HttpGet("room/{roomId}/details")]
+        public async Task<IActionResult> GetRoomDetails(string roomId)
+        {
+            var dashboard = await dashboardService.GetRoomDetailsAsync(roomId);
+            return Ok(dashboard);
+        }
     }
 }
