@@ -6,7 +6,7 @@ const defaultConfig = {
   enabled: false,
   unsubscribe: () => console.log("nothing to unsub"),
   baseUrl: "https://localhost:7284",
-  speedupFactor: 10000,
+  speedupFactor: 1000000,
   turboActive: false,
   turboSubscription: null,
 };
@@ -16,7 +16,7 @@ const MOD_ID = "room-cracker";
 const ROOM_CRACKER_ID = `${MOD_ID}-toggle`;
 const STATES = {
   initial: "initial",
-  victory: "Victory",
+  victory: "victory",
 };
 const DEFAULT_TICK_INTERVAL_MS = 62.5;
 
@@ -139,9 +139,8 @@ const getLastTick = () => {
     // Subscribe to timer to track ticks and game state
     timerSubscription = globalThis.state.gameTimer.subscribe((data) => {
       const { currentTick, state, readableGrade, rankPoints } = data.context;
-
       // Check for stop conditions
-      if (state !== "initial") {
+      if (state !== STATES.initial) {
         // Game completed naturally through state change
         if (!hasResolved) {
           hasResolved = true;
