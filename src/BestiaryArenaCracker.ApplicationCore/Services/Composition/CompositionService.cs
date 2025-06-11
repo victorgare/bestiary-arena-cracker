@@ -43,7 +43,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
                             Tile = m.TileLocation,
                             Monster = new Monster
                             {
-                                Name = m.Name.ToLowerInvariant(),
+                                Name = m.Name.ToDisplayName(),
                                 Hp = m.Hitpoints,
                                 Ad = m.Attack,
                                 Ap = m.AbilityPower,
