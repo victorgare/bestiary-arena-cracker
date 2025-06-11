@@ -35,13 +35,14 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Dashboards
                         RoomId = roomConfig.Id,
                         RoomName = roomConfig.Name,
                         TotalResults = 0,
+                        TotalCompositions = 0,
                         Ticks = 0,
                         Points = 0,
                         Grade = "F"
                     };
                 }
 
-                roomSummary.TotalCompositions = await compositionService.CalculatePossibleCompositions(roomConfig);
+                //roomSummary.TotalCompositions = await compositionService.CalculatePossibleCompositions(roomConfig);
                 result.Add(roomSummary);
             }
 

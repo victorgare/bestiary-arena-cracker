@@ -10,6 +10,5 @@ namespace BestiaryArenaCracker.ApplicationCore.Interfaces.Services
         Task GenerateAllCompositionsForRoomAsync(RoomConfig room, CancellationToken cancellationToken = default);
         Task AddResults(int compositionId, CompositionResultsEntity[] compositions);
 
-        Task<Int128> CalculatePossibleCompositions(RoomConfig room);
     }
 }

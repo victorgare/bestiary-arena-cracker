@@ -3,6 +3,7 @@ using BestiaryArenaCracker.ApplicationCore.Interfaces.Repositories;
 using BestiaryArenaCracker.ApplicationCore.Interfaces.Services;
 using BestiaryArenaCracker.Domain;
 using BestiaryArenaCracker.Domain.Composition;
+using BestiaryArenaCracker.Domain.Constants;
 using BestiaryArenaCracker.Domain.Entities;
 using BestiaryArenaCracker.Domain.Extensions;
 using BestiaryArenaCracker.Domain.Room;
@@ -12,12 +13,11 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
 {
     public class CompositionService(IRoomConfigProvider roomConfigProvider, ICompositionRepository compositionRepository) : ICompositionService
     {
-        private const int MaxResultsPerComposition = 10;
         public async Task<CompositionResult?> FindCompositionAsync()
         {
             foreach (var room in roomConfigProvider.Rooms)
             {
-                var composition = await compositionRepository.GetNextAvailableCompositionAsync(room.Id, MaxResultsPerComposition);
+                var composition = await compositionRepository.GetNextAvailableCompositionAsync(room.Id, ConfigurationConstants.DefaultMinimumCompositionRuns);
 
                 if (composition == null)
                     continue;
@@ -28,7 +28,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
                 return new CompositionResult
                 {
                     CompositionId = composition.Id,
-                    RemainingRuns = MaxResultsPerComposition - resultsCount,
+                    RemainingRuns = ConfigurationConstants.DefaultMinimumCompositionRuns - resultsCount,
                     Composition = new Domain.Composition.Composition
                     {
                         Map = room.Name,
@@ -161,7 +161,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
                 var canParse = Enum.TryParse<Creatures>(creatureName, out var creature);
 
                 // Se houver AllowedEquipments, use apenas eles. Senão, use todos exceto os do SkipEquipment.
-                var allowedEquipments = canParse ? creature.GetAllowedEquipments() : Array.Empty<Equipments>();
+                var allowedEquipments = canParse ? creature.GetAllowedEquipments() : [];
                 var equipmentsToUse = allowedEquipments.Length > 0
                     ? allowedEquipments
                     : canParse
@@ -218,79 +218,6 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
             return compositionRepository.AddResults(compositionId, compositions);
         }
 
-        public Task<Int128> CalculatePossibleCompositions(RoomConfig room)
-        {
-            var allCreatures = Enum.GetValues<Creatures>()
-                .Cast<Creatures>()
-                .Where(c => !c.IsSoloUseless() || room.MaxTeamSize > 1)
-                .ToArray();
-
-            var freeTiles = room.File.Data.GetFreeTiles();
-            var allEquipments = Enum.GetValues<Equipments>().Cast<Equipments>().ToArray();
-            var allStats = Enum.GetValues<EquipmentStat>().Cast<EquipmentStat>().ToArray();
-
-            // Precompute valid equipment/stat count for each creature
-            var validEquipStatCount = allCreatures
-                .Select(creature =>
-                {
-                    var allowed = creature.GetAllowedEquipments();
-                    IEnumerable<Equipments> equipmentsToUse = allowed.Length > 0
-                        ? allowed
-                        : allEquipments.Where(eq => !creature.SkipEquipment(eq));
-                    return equipmentsToUse.Count() * allStats.Length;
-                })
-                .ToArray();
-
-            Int128 total = 0;
-
-            for (int teamSize = 1; teamSize <= room.MaxTeamSize; teamSize++)
-            {
-                var nCreatures = allCreatures.Length;
-                var nTiles = freeTiles.Length;
-
-                // Number of unique positions (freeTiles choose teamSize)
-                var posComb = Combinations(nTiles, teamSize);
-
-                // Sum over all unique teams (n choose k), product of validEquipStatCount for each team
-                Int128 teamEquipCombSum = 0;
-
-                foreach (var indices in GetIndexCombinations(nCreatures, teamSize))
-                {
-                    Int128 prod = 1;
-                    foreach (var idx in indices)
-                        prod *= validEquipStatCount[idx];
-                    teamEquipCombSum += prod;
-                }
-
-                total += posComb * teamEquipCombSum;
-            }
-
-            return Task.FromResult(total);
-        }
-
-        // Helper: Get all index combinations (n choose k)
-        private static IEnumerable<int[]> GetIndexCombinations(int n, int k)
-        {
-            int[] result = new int[k];
-            Stack<(int i, int next)> stack = new();
-            stack.Push((0, 0));
-            while (stack.Count > 0)
-            {
-                var (i, next) = stack.Pop();
-                if (i == k)
-                {
-                    yield return (int[])result.Clone();
-                }
-                else
-                {
-                    for (int j = n - 1; j >= next; j--)
-                    {
-                        result[i] = j;
-                        stack.Push((i + 1, j + 1));
-                    }
-                }
-            }
-        }
         // Helper: Get all combinations of a list (n choose k)
         private static IEnumerable<List<T>> GetCombinations<T>(IEnumerable<T> list, int length)
         {
@@ -314,16 +241,5 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
             }
         }
 
-        private static Int128 Combinations(int n, int k)
-        {
-            if (k > n) return 0;
-            if (k == 0 || k == n) return 1;
-            long result = 1;
-            for (int i = 1; i <= k; i++)
-            {
-                result = result * (n - (k - i)) / i;
-            }
-            return (int)result;
-        }
     }
 }
