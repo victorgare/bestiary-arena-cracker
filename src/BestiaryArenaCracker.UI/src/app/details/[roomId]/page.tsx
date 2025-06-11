@@ -1,9 +1,21 @@
 "use client";
+import { DetailsSection } from "@/components/DashboardDetails/DetailsSection";
+import { DetailsData } from "@/components/DashboardDetails/Model/DetailsData";
 import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function RoomDetails() {
   const { roomId } = useParams();
   const router = useRouter();
+  const [data, setData] = useState<DetailsData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API_BASEURL}/dashboards/room/${roomId}/details`)
+      .then((res) => res.json())
+      .then(setData)
+      .finally(() => setLoading(false));
+  }, [roomId]);
 
   return (
     <div
@@ -41,22 +53,56 @@ export default function RoomDetails() {
           ← Back
         </button>
 
-        <h1
-          className="text-3xl font-bold mb-4"
-          style={{ color: "var(--color-gold)" }}
-        >
+        <h1 className="text-3xl font-bold mb-4" style={{ color: "var(--color-gold)" }}>
           Room Details
         </h1>
-        <p className="mb-2">
+        <p className="mb-6">
           <span style={{ color: "var(--color-muted)" }}>Room ID:</span> {roomId}
         </p>
-        <div
-          className="mt-8 text-center"
-          style={{ color: "var(--color-muted)" }}
-        >
-          {/* Add more details here */}
-          Details coming soon...
-        </div>
+
+        {loading && (
+          <div className="text-center" style={{ color: "var(--color-muted)" }}>
+            Loading...
+          </div>
+        )}
+
+         {!loading && data && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div
+              className="rounded-xl p-4 h-full"
+              style={{
+                background: "var(--color-panel)",
+                border: "2px solid var(--color-border)",
+                boxShadow: "0 2px 8px 0 #0004",
+                minHeight: 200,
+              }}
+            >
+              <DetailsSection title="Least Ticks" compositions={data.leastTicks} />
+            </div>
+            <div
+              className="rounded-xl p-4 h-full"
+              style={{
+                background: "var(--color-panel)",
+                border: "2px solid var(--color-border)",
+                boxShadow: "0 2px 8px 0 #0004",
+                minHeight: 200,
+              }}
+            >
+              <DetailsSection title="Highest Points" compositions={data.highestPoints} />
+            </div>
+            <div
+              className="rounded-xl p-4 h-full"
+              style={{
+                background: "var(--color-panel)",
+                border: "2px solid var(--color-border)",
+                boxShadow: "0 2px 8px 0 #0004",
+                minHeight: 200,
+              }}
+            >
+              <DetailsSection title="Highest Victory Rate" compositions={data.highestVictoryRate} />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
