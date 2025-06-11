@@ -11,27 +11,20 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
 {
     public class CompositionService(IRoomConfigProvider roomConfigProvider, ICompositionRepository compositionRepository) : ICompositionService
     {
-        private const int MaxResultsPerComposition = 50;
+        private const int MaxResultsPerComposition = 10;
         public async Task<CompositionResult?> FindCompositionAsync()
         {
             foreach (var room in roomConfigProvider.Rooms)
             {
-                var composition = await GetNextOrGenerate(room);
+                var composition = await compositionRepository.GetNextAvailableCompositionAsync(room.Id, MaxResultsPerComposition);
 
                 if (composition == null)
-                {
                     continue;
-                }
 
-                // Get monsters for this composition
                 var monsters = await compositionRepository.GetMonstersByCompositionIdAsync(composition.Id);
-
-                // Calculate remaining results
                 var resultsCount = await compositionRepository.GetResultsCountAsync(composition.Id);
-                var remainingResults = MaxResultsPerComposition - resultsCount;
 
-                // Build the result object
-                var compositionResult = new CompositionResult
+                return new CompositionResult
                 {
                     CompositionId = composition.Id,
                     RemainingRuns = MaxResultsPerComposition - resultsCount,
@@ -39,46 +32,35 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
                     {
                         Map = room.Name,
                         Board = [.. monsters.Select(m => new Board
+                    {
+                        Tile = m.TileLocation,
+                        Monster = new Monster
                         {
-                            Tile = m.TileLocation,
-                            Monster = new Monster
-                            {
-                                Name = m.Name.ToDisplayName(),
-                                Hp = m.Hitpoints,
-                                Ad = m.Attack,
-                                Ap = m.AbilityPower,
-                                Armor = m.Armor,
-                                MagicResist = m.MagicResistance,
-                                Level = m.Level
-                            },
-                            Equipment = new Equipment
-                            {
-                                Name = m.Equipment.GetDescription(),
-                                Stat = m.EquipmentStat.GetDescription(),
-                                Tier = m.EquipmentTier
-                            }
-                        })]
+                            Name = m.Name.ToDisplayName(),
+                            Hp = m.Hitpoints,
+                            Ad = m.Attack,
+                            Ap = m.AbilityPower,
+                            Armor = m.Armor,
+                            MagicResist = m.MagicResistance,
+                            Level = m.Level
+                        },
+                        Equipment = new Equipment
+                        {
+                            Name = m.Equipment.GetDescription(),
+                            Stat = m.EquipmentStat.GetDescription(),
+                            Tier = m.EquipmentTier
+                        }
+                    })]
                     }
                 };
-
-                // You can serialize this result to JSON in your controller, or return as-is if using ASP.NET Core's automatic serialization
-                return compositionResult;
             }
 
             return null!;
         }
 
-        public async Task<CompositionEntity?> GetNextOrGenerate(RoomConfig room)
+        // Public method for the worker to generate all compositions for a room
+        public async Task GenerateAllCompositionsForRoomAsync(RoomConfig room, CancellationToken cancellationToken = default)
         {
-            // 1. Try to find a composition for this room with < MaxResultsPerComposition results
-            var composition = await compositionRepository.GetNextAvailableCompositionAsync(room.Id, MaxResultsPerComposition);
-
-            if (composition != null)
-            {
-                return composition;
-            }
-
-            // 2a. Generate all possible valid compositions (combinatorial logic)
             foreach (var team in GenerateValidTeams(room))
             {
                 foreach (var positions in GenerateValidPositions(room, team.Count))
@@ -87,11 +69,9 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
                     {
                         var hash = ComputeCompositionHash(room, equippedTeam, positions);
 
-                        // Check if this composition already exists
                         if (await compositionRepository.CompositionExistsAsync(room.Id, hash))
                             continue;
 
-                        // 3. Insert new composition and its monsters
                         var newComposition = new CompositionEntity
                         {
                             CompositionHash = hash,
@@ -125,16 +105,15 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
 
                         await compositionRepository.AddMonstersAsync(newComposition.Id, compositionMonsters);
 
-                        return newComposition;
+                        if (cancellationToken.IsCancellationRequested)
+                            return;
                     }
                 }
             }
-
-            return null;
         }
 
         // Helper: Generate all valid teams (unique creatures, skip solo-useless)
-        private IEnumerable<List<CompositionMonstersEntity>> GenerateValidTeams(RoomConfig room)
+        private static IEnumerable<List<CompositionMonstersEntity>> GenerateValidTeams(RoomConfig room)
         {
             var allCreatures = Enum.GetValues<Creatures>()
                 .Cast<Creatures>()
@@ -154,7 +133,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
         }
 
         // Helper: Generate all valid positions for a team
-        private IEnumerable<List<int>> GenerateValidPositions(RoomConfig room, int teamSize)
+        private static IEnumerable<List<int>> GenerateValidPositions(RoomConfig room, int teamSize)
         {
             var freeTiles = room.File.Data.GetFreeTiles();
             foreach (var positions in GetCombinations(freeTiles, teamSize))
@@ -177,25 +156,33 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
                     yield break;
                 }
 
+                // Try to parse the creature name to the enum
+                var creatureName = team[index].Name;
+                var canParse = Enum.TryParse<Creatures>(creatureName, out var creature);
+
                 foreach (var eq in equipment)
                 {
+                    // Skip equipment if the creature should not have it
+                    if (canParse && creature.SkipsEquipment(eq))
+                        continue;
+
                     foreach (var stat in stats)
                     {
                         var next = new List<CompositionMonstersEntity>(current)
-                        {
-                            new() {
-                                Name = team[index].Name,
-                                Equipment = eq,
-                                EquipmentStat = stat,
-                                Hitpoints = team[index].Hitpoints,
-                                Attack = team[index].Attack,
-                                AbilityPower = team[index].AbilityPower,
-                                Armor = team[index].Armor,
-                                MagicResistance = team[index].MagicResistance,
-                                Level = team[index].Level,
-                                EquipmentTier = team[index].EquipmentTier
-                            }
-                        };
+                {
+                    new() {
+                        Name = team[index].Name,
+                        Equipment = eq,
+                        EquipmentStat = stat,
+                        Hitpoints = team[index].Hitpoints,
+                        Attack = team[index].Attack,
+                        AbilityPower = team[index].AbilityPower,
+                        Armor = team[index].Armor,
+                        MagicResistance = team[index].MagicResistance,
+                        Level = team[index].Level,
+                        EquipmentTier = team[index].EquipmentTier
+                    }
+                };
 
                         foreach (var result in Expand(index + 1, next))
                         {
@@ -220,8 +207,82 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
             return Convert.ToBase64String(SHA256.HashData(bytes));
         }
 
+
+        public Task AddResults(int compositionId, CompositionResultsEntity[] compositions)
+        {
+            return compositionRepository.AddResults(compositionId, compositions);
+        }
+
+        public Task<Int128> CalculatePossibleCompositions(RoomConfig room)
+        {
+            var allCreatures = Enum.GetValues<Creatures>()
+         .Cast<Creatures>()
+         .Where(c => !c.IsSoloUseless() || room.MaxTeamSize > 1)
+         .ToArray();
+
+            var freeTiles = room.File.Data.GetFreeTiles();
+            var allEquipments = Enum.GetValues<Equipments>().Cast<Equipments>().ToArray();
+            var allStats = Enum.GetValues<EquipmentStat>().Cast<EquipmentStat>().ToArray();
+
+            // Precompute valid equipment/stat count for each creature
+            var validEquipStatCount = allCreatures
+                .Select(creature =>
+                    allEquipments.Count(eq => !creature.SkipsEquipment(eq)) * allStats.Length
+                )
+                .ToArray();
+
+            Int128 total = 0;
+
+            for (int teamSize = 1; teamSize <= room.MaxTeamSize; teamSize++)
+            {
+                var nCreatures = allCreatures.Length;
+                var nTiles = freeTiles.Length;
+
+                // Number of unique positions (freeTiles choose teamSize)
+                var posComb = Combinations(nTiles, teamSize);
+
+                // Sum over all unique teams (n choose k), product of validEquipStatCount for each team
+                Int128 teamEquipCombSum = 0;
+
+                foreach (var indices in GetIndexCombinations(nCreatures, teamSize))
+                {
+                    Int128 prod = 1;
+                    foreach (var idx in indices)
+                        prod *= validEquipStatCount[idx];
+                    teamEquipCombSum += prod;
+                }
+
+                total += posComb * teamEquipCombSum;
+            }
+
+            return Task.FromResult(total);
+        }
+
+        // Helper: Get all index combinations (n choose k)
+        private static IEnumerable<int[]> GetIndexCombinations(int n, int k)
+        {
+            int[] result = new int[k];
+            Stack<(int i, int next)> stack = new();
+            stack.Push((0, 0));
+            while (stack.Count > 0)
+            {
+                var (i, next) = stack.Pop();
+                if (i == k)
+                {
+                    yield return (int[])result.Clone();
+                }
+                else
+                {
+                    for (int j = n - 1; j >= next; j--)
+                    {
+                        result[i] = j;
+                        stack.Push((i + 1, j + 1));
+                    }
+                }
+            }
+        }
         // Helper: Get all combinations of a list (n choose k)
-        private IEnumerable<List<T>> GetCombinations<T>(IEnumerable<T> list, int length)
+        private static IEnumerable<List<T>> GetCombinations<T>(IEnumerable<T> list, int length)
         {
             if (length == 0)
             {
@@ -241,41 +302,6 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
                     i++;
                 }
             }
-        }
-
-        public Task AddResults(int compositionId, CompositionResultsEntity[] compositions)
-        {
-            return compositionRepository.AddResults(compositionId, compositions);
-        }
-
-        public Task<Int128> CalculatePossibleCompositions(RoomConfig room)
-        {
-            var allCreatures = Enum.GetValues<Creatures>()
-                   .Cast<Creatures>()
-                   .Where(c => !c.IsSoloUseless() || room.MaxTeamSize > 1)
-                   .ToList();
-
-            var freeTiles = room.File.Data.GetFreeTiles();
-            int equipmentCount = Enum.GetValues<Equipments>().Length;
-            int statCount = Enum.GetValues<EquipmentStat>().Length;
-
-            Int128 total = 0;
-
-            for (int teamSize = 1; teamSize <= room.MaxTeamSize; teamSize++)
-            {
-                // Number of unique teams (n choose k)
-                var teamComb = Combinations(allCreatures.Count, teamSize);
-
-                // Number of unique positions (freeTiles choose teamSize)
-                var posComb = Combinations(freeTiles.Length, teamSize);
-
-                // Number of equipment/stat combos per team
-                var equipComb = (Int128)Math.Pow(equipmentCount * statCount, teamSize);
-
-                total += teamComb * posComb * equipComb;
-            }
-
-            return Task.FromResult(total);
         }
 
         private static Int128 Combinations(int n, int k)

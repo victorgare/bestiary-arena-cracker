@@ -27,6 +27,7 @@ public class Program
         builder.Services.AddProvidersDependency();
         builder.Services.AddServicesDependency();
         builder.Services.AddRepositoriesDependency();
+        builder.Services.AddWorkersDependency();
 
         // enable CORS
         builder.Services.AddCors(options =>

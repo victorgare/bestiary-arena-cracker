@@ -1,5 +1,6 @@
 using BestiaryArenaCracker.Domain.Attributes;
 using System.ComponentModel;
+using System.Reflection;
 
 namespace BestiaryArenaCracker.Domain.Extensions
 {
@@ -28,6 +29,15 @@ namespace BestiaryArenaCracker.Domain.Extensions
                 return attrs.Length > 0;
             }
             return false;
+        }
+
+        public static bool SkipsEquipment(this Creatures creature, Equipments equipment)
+        {
+            var member = typeof(Creatures).GetMember(creature.ToString()).FirstOrDefault();
+            if (member == null) return false;
+
+            var attr = member.GetCustomAttribute<SkipEquipmentAttribute>();
+            return attr != null && attr.EquipmentsToSkip.Contains(equipment);
         }
     }
 }
