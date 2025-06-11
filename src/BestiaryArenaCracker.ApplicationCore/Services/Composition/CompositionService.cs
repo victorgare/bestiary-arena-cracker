@@ -146,7 +146,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
         // Helper: Generate all equipment/stat combos for a team
         private static IEnumerable<List<CompositionMonstersEntity>> GenerateEquipmentAndStats(List<CompositionMonstersEntity> team)
         {
-            var equipment = Enum.GetValues<Equipments>().Cast<Equipments>();
+            var allEquipments = Enum.GetValues<Equipments>().Cast<Equipments>();
             var stats = Enum.GetValues<EquipmentStat>().Cast<EquipmentStat>();
 
             IEnumerable<List<CompositionMonstersEntity>> Expand(int index, List<CompositionMonstersEntity> current)
@@ -157,21 +157,25 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
                     yield break;
                 }
 
-                // Try to parse the creature name to the enum
                 var creatureName = team[index].Name;
                 var canParse = Enum.TryParse<Creatures>(creatureName, out var creature);
 
-                foreach (var eq in equipment)
-                {
-                    // Skip equipment if the creature should not have it
-                    if (canParse && creature.SkipsEquipment(eq))
-                        continue;
+                // Se houver AllowedEquipments, use apenas eles. Senão, use todos exceto os do SkipEquipment.
+                var allowedEquipments = canParse ? creature.GetAllowedEquipments() : Array.Empty<Equipments>();
+                var equipmentsToUse = allowedEquipments.Length > 0
+                    ? allowedEquipments
+                    : canParse
+                        ? allEquipments.Where(eq => !creature.SkipEquipment(eq))
+                        : allEquipments;
 
+                foreach (var eq in equipmentsToUse)
+                {
                     foreach (var stat in stats)
                     {
                         var next = new List<CompositionMonstersEntity>(current)
                 {
-                    new() {
+                    new()
+                    {
                         Name = team[index].Name,
                         Equipment = eq,
                         EquipmentStat = stat,
@@ -217,9 +221,9 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
         public Task<Int128> CalculatePossibleCompositions(RoomConfig room)
         {
             var allCreatures = Enum.GetValues<Creatures>()
-         .Cast<Creatures>()
-         .Where(c => !c.IsSoloUseless() || room.MaxTeamSize > 1)
-         .ToArray();
+                .Cast<Creatures>()
+                .Where(c => !c.IsSoloUseless() || room.MaxTeamSize > 1)
+                .ToArray();
 
             var freeTiles = room.File.Data.GetFreeTiles();
             var allEquipments = Enum.GetValues<Equipments>().Cast<Equipments>().ToArray();
@@ -228,8 +232,13 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
             // Precompute valid equipment/stat count for each creature
             var validEquipStatCount = allCreatures
                 .Select(creature =>
-                    allEquipments.Count(eq => !creature.SkipsEquipment(eq)) * allStats.Length
-                )
+                {
+                    var allowed = creature.GetAllowedEquipments();
+                    IEnumerable<Equipments> equipmentsToUse = allowed.Length > 0
+                        ? allowed
+                        : allEquipments.Where(eq => !creature.SkipEquipment(eq));
+                    return equipmentsToUse.Count() * allStats.Length;
+                })
                 .ToArray();
 
             Int128 total = 0;

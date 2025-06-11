@@ -31,13 +31,29 @@ namespace BestiaryArenaCracker.Domain.Extensions
             return false;
         }
 
-        public static bool SkipsEquipment(this Creatures creature, Equipments equipment)
+        public static bool SkipEquipment(this Creatures creature, Equipments equipment)
         {
             var member = typeof(Creatures).GetMember(creature.ToString()).FirstOrDefault();
             if (member == null) return false;
 
             var attr = member.GetCustomAttribute<SkipEquipmentAttribute>();
             return attr != null && attr.EquipmentsToSkip.Contains(equipment);
+        }
+
+        public static bool AllowedEquipment(this Creatures creature, Equipments equipment)
+        {
+            var member = typeof(Creatures).GetMember(creature.ToString()).FirstOrDefault();
+            if (member == null) return false;
+
+            var attr = member.GetCustomAttribute<AllowedEquipmentsAttribute>();
+            return attr != null && attr.Equipments.Contains(equipment);
+        }
+
+        public static Equipments[] GetAllowedEquipments(this Creatures creature)
+        {
+            var member = typeof(Creatures).GetMember(creature.ToString()).FirstOrDefault();
+            var attr = member?.GetCustomAttribute<AllowedEquipmentsAttribute>();
+            return attr?.Equipments ?? [];
         }
     }
 }

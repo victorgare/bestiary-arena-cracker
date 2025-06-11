@@ -76,6 +76,7 @@ namespace BestiaryArenaCracker.Repository.Repositories
             var highestVictoryRate = await statsWithHashQuery
                 .OrderByDescending(x => x.VictoryRate)
                 .ThenByDescending(x => x.VictoryCount)
+                .ThenBy(c => c.MinTicks)
                 .Take(10)
                 .Select(x => new CompositionDashboardResult
                 {
