@@ -1,5 +1,7 @@
 ﻿using BestiaryArenaCracker.ApplicationCore.Interfaces.Repositories;
+using BestiaryArenaCracker.Domain.Composition;
 using BestiaryArenaCracker.Domain.Dashboards;
+using BestiaryArenaCracker.Domain.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace BestiaryArenaCracker.Repository.Repositories
@@ -99,17 +101,41 @@ namespace BestiaryArenaCracker.Repository.Repositories
                 .ToListAsync();
 
             // Attach monsters to each result
-            void AttachMonsters(List<CompositionDashboardResult> results)
+            void AttachBoards(List<CompositionDashboardResult> results)
             {
                 foreach (var result in results)
                 {
-                    result.Monsters = monsters.Where(m => m.CompositionId == result.CompositionId).ToList();
+                    var boards = monsters
+                        .Where(m => m.CompositionId == result.CompositionId)
+                        .Select(m => new Board
+                        {
+                            Tile = m.TileLocation,
+                            Monster = new Monster
+                            {
+                                Name = m.Name.ToDisplayName(),
+                                Hp = m.Hitpoints,
+                                Ad = m.Attack,
+                                Ap = m.AbilityPower,
+                                Armor = m.Armor,
+                                MagicResist = m.MagicResistance,
+                                Level = m.Level
+                            },
+                            Equipment = new Equipment
+                            {
+                                Name = m.Equipment.GetDescription(),
+                                Stat = m.EquipmentStat.GetDescription(),
+                                Tier = m.EquipmentTier
+                            }
+                        })
+                        .ToList();
+
+                    result.Board = boards;
                 }
             }
 
-            AttachMonsters(leastTicks);
-            AttachMonsters(highestPoints);
-            AttachMonsters(highestVictoryRate);
+            AttachBoards(leastTicks);
+            AttachBoards(highestPoints);
+            AttachBoards(highestVictoryRate);
 
             return new RoomDetailsDashboard
             {

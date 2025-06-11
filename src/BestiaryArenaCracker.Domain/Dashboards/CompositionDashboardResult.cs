@@ -1,4 +1,4 @@
-﻿using BestiaryArenaCracker.Domain.Entities;
+﻿using BestiaryArenaCracker.Domain.Composition;
 
 namespace BestiaryArenaCracker.Domain.Dashboards
 {
@@ -10,6 +10,6 @@ namespace BestiaryArenaCracker.Domain.Dashboards
         public int? TotalResults { get; set; }
         public int? VictoryCount { get; set; }
         public double? VictoryRate { get; set; }
-        public List<CompositionMonstersEntity> Monsters { get; set; } = [];
+        public List<Board> Board { get; set; } = [];
     }
 }
