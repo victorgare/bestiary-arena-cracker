@@ -10,5 +10,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Interfaces.Providers
         // list of all rooms, including those ignored by IgnoredRoomsIds
         IReadOnlyList<RoomConfig> AllRooms { get; }
 
+        IReadOnlySet<string> BoostedRoomId { get; }
+
     }
 }

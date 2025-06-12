@@ -9,9 +9,10 @@ namespace BestiaryArenaCracker.ApplicationCore.Providers
     {
         public IReadOnlyList<RoomConfig> Rooms { get; }
         public IReadOnlyList<RoomConfig> AllRooms { get; }
+        public IReadOnlySet<string> BoostedRoomId { get; }
 
         // ignore this rooms, for generations purposes only
-        public string[] IgnoredRoomsIds = ["rkswrs"];
+        private static readonly string[] IgnoredRoomsIds = ["rkswrs", "rkwht"];
 
         public RoomConfigProvider()
         {
@@ -27,6 +28,9 @@ namespace BestiaryArenaCracker.ApplicationCore.Providers
 
             Rooms = [.. jsonConfig.Where(c => !IgnoredRoomsIds.Contains(c.Id))];
             AllRooms = jsonConfig;
+
+            // update this when boosted room reset
+            BoostedRoomId = new HashSet<string> { "rkevgr" };
         }
     }
 }
