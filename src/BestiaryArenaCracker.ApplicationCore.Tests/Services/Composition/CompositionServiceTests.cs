@@ -17,6 +17,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
         public void Setup()
         {
             _roomConfigProvider = Substitute.For<IRoomConfigProvider>();
+            _roomConfigProvider.BoostedRoomId.Returns(new HashSet<string>());
             _compositionRepository = Substitute.For<ICompositionRepository>();
         }
 
@@ -113,7 +114,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
         }
 
         [Test]
-        public async Task ShouldNotGenerateOneCreatureCompositionsIfTheCreatureIsUseslessSoloAndTheRoomAllowMultipleCreatures()
+        public async Task ShouldNotGenerateOneCreatureCompositionsIfTheCreatureIsUselessSoloAndTheRoomAllowMultipleCreatures()
         {
             var data = new Data
             {
