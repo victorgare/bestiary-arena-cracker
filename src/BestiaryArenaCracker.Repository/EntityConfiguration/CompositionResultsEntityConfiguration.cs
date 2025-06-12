@@ -13,7 +13,7 @@ namespace BestiaryArenaCracker.Repository.EntityConfiguration
             builder.HasKey(c => c.Id);
 
             builder
-                .HasOne<Composition>()
+                .HasOne<CompositionEntity>()
                 .WithMany()
                 .HasForeignKey(x => x.CompositionId)
                 .OnDelete(DeleteBehavior.Cascade);
