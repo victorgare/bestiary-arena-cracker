@@ -177,7 +177,7 @@ async function startCracking() {
   setSandboxMode();
   setGameBoardDisplay(false);
   // ensure UI is updated
-  await sleep(100);
+  await sleep(50);
   enableTurbo();
 
   do {
@@ -189,7 +189,7 @@ async function startCracking() {
       $configureBoard(composition);
 
       // ensure composition is placed
-      await sleep(100);
+      await sleep(50);
 
       for (let index = 1; index <= remainingRuns; index++) {
         // force stop
