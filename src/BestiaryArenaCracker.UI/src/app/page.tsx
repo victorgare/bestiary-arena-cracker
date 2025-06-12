@@ -3,19 +3,46 @@ import { CrackerIcon } from "@/components/atom/Icons/CrackerIcon ";
 import { ProgressBar } from "@/components/atom/ProgressBar";
 import { DashboardList } from "@/components/DashboardSummary/DashboardList";
 import { DashboardSummary } from "@/components/DashboardSummary/Model/DashboardSummary";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+
+const REFRESH_INTERVAL = 60; // seconds
 
 export default function Home() {
   const [summaries, setSummaries] = useState<DashboardSummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [secondsLeft, setSecondsLeft] = useState(REFRESH_INTERVAL);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const baseUrl = process.env.NEXT_PUBLIC_API_BASEURL;
-  useEffect(() => {
+
+  // Fetch data function
+  const fetchData = () => {
+    setLoading(true);
     fetch(`${baseUrl}/dashboards/summary`)
       .then((res) => res.json())
       .then((data) => setSummaries(data))
       .catch(() => setSummaries([]))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchData();
+    setSecondsLeft(REFRESH_INTERVAL);
+
+    timerRef.current = setInterval(() => {
+      setSecondsLeft((prev) => {
+        if (prev <= 1) {
+          fetchData();
+          return REFRESH_INTERVAL;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [baseUrl]);
 
   // Calculate overall progress
@@ -65,6 +92,9 @@ export default function Home() {
           />
           <div className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>
             {totalRuns} / {totalPossibilities} ({percent}%)
+          </div>
+          <div className="mt-1 text-xs" style={{ color: "var(--color-muted)" }}>
+            Auto-refresh in <b>{secondsLeft}s</b>
           </div>
         </div>
         <div
