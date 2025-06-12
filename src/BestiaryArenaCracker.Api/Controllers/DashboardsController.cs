@@ -9,7 +9,7 @@ namespace BestiaryArenaCracker.Api.Controllers
     public class DashboardsController(IDashboardService dashboardService) : ControllerBase
     {
         [HttpGet("summary")]
-        public async Task<IActionResult> GetSymmary()
+        public async Task<IActionResult> GetSummary()
         {
             var dashboard = await dashboardService.GetSummaryAsync();
             return Ok(dashboard);

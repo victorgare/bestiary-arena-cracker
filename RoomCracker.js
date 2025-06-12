@@ -34,7 +34,9 @@ async function getComposition() {
     throw new Error(`Response status: ${response.status}`);
   }
 
-  if (response.status == 202) {
+  // Server returns 204 (No Content) when there is no composition available.
+  // Older versions might return 202 (Accepted), so handle both cases.
+  if (response.status === 204 || response.status === 202) {
     throw new Error("There is nothing to crack :)");
   }
   return await response.json();
