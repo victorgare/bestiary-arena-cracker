@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace BestiaryArenaCracker.MigrationService
 {
-    public class RoomThumnnailsDownload : BackgroundService
+    public class RoomThumbnailsDownload : BackgroundService
     {
         public const string ActivitySourceName = "Migrations";
         private static readonly ActivitySource s_activitySource = new(ActivitySourceName);

@@ -8,12 +8,12 @@ public class Program
     {
         var builder = Host.CreateApplicationBuilder(args);
         builder.AddServiceDefaults();
-        builder.Services.AddHostedService<RoomThumnnailsDownload>();
+        builder.Services.AddHostedService<RoomThumbnailsDownload>();
         builder.Services.AddHostedService<Worker>();
 
         builder.Services.AddOpenTelemetry()
             .WithTracing(tracing => tracing.AddSource(Worker.ActivitySourceName))
-            .WithTracing(tracing => tracing.AddSource(RoomThumnnailsDownload.ActivitySourceName));
+            .WithTracing(tracing => tracing.AddSource(RoomThumbnailsDownload.ActivitySourceName));
 
         builder.AddSqlServerDbContext<ApplicationDbContext>("BestiaryArenaCracker");
 
