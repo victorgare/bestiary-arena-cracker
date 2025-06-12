@@ -1,6 +1,6 @@
 # Migrations steps
 
-## Create new migration stop
+## Create new migration step
 
 change `<step name>` with the desired migration name
 
