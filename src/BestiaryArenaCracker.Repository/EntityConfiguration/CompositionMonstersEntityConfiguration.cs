@@ -1,4 +1,5 @@
 ﻿using BestiaryArenaCracker.Domain;
+using BestiaryArenaCracker.Domain.Composition;
 using BestiaryArenaCracker.Domain.Entities;
 using BestiaryArenaCracker.Domain.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -21,6 +22,12 @@ namespace BestiaryArenaCracker.Repository.EntityConfiguration
                     v => v.GetDescription(), // To database
                     v => Enum.GetValues<EquipmentStat>().First(e => e.GetDescription() == v) // From database
                 );
+
+            builder
+                .HasOne<Composition>()
+                .WithMany()
+                .HasForeignKey(x => x.CompositionId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

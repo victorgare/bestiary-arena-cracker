@@ -1,4 +1,5 @@
-﻿using BestiaryArenaCracker.Domain.Entities;
+﻿using BestiaryArenaCracker.Domain.Composition;
+using BestiaryArenaCracker.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -10,6 +11,12 @@ namespace BestiaryArenaCracker.Repository.EntityConfiguration
         {
             builder.ToTable("CompositionResults");
             builder.HasKey(c => c.Id);
+
+            builder
+                .HasOne<Composition>()
+                .WithMany()
+                .HasForeignKey(x => x.CompositionId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
