@@ -5,6 +5,13 @@ namespace BestiaryArenaCracker.Domain
     public enum Creatures
     {
         [SoloUseless]
+        [AllowedEquipments(
+            Equipments.BlueRobe,
+            Equipments.BootsOfHaste,
+            Equipments.FireAxe,
+            Equipments.IceRapier,
+            Equipments.SpringsproutRod,
+            Equipments.WandOfDecay)]
         Banshee,
 
         [AllowedEquipments(
