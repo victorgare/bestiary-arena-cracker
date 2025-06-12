@@ -83,6 +83,9 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
 
                         await compositionRepository.AddCompositionAsync(newComposition);
 
+                        if (cancellationToken.IsCancellationRequested)
+                            return;
+
                         var compositionMonsters = new List<CompositionMonstersEntity>();
                         for (int i = 0; i < equippedTeam.Count; i++)
                         {
@@ -118,13 +121,13 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
         // Helper: Generate all valid teams (unique creatures, skip solo-useless)
         private static IEnumerable<List<CompositionMonstersEntity>> GenerateValidTeams(RoomConfig room)
         {
-            var allCreatures = Enum.GetValues<Creatures>()
-                .Cast<Creatures>()
-                .Where(c => !c.IsSoloUseless() || room.MaxTeamSize > 1)
-                .ToList();
-
             for (int teamSize = 1; teamSize <= room.MaxTeamSize; teamSize++)
             {
+                var allCreatures = Enum.GetValues<Creatures>()
+                 .Cast<Creatures>()
+                 .Where(c => teamSize != 1 || !c.IsSoloUseless())
+                 .ToList();
+
                 foreach (var team in GetCombinations(allCreatures, teamSize))
                 {
                     yield return team.Select(c => new CompositionMonstersEntity

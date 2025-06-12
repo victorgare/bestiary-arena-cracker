@@ -26,6 +26,9 @@ namespace BestiaryArenaCracker.ApplicationCore.Providers
                 DefaultIgnoreCondition = JsonIgnoreCondition.Never
             }) ?? [];
 
+            // just to start having results fast
+            jsonConfig.Reverse();
+
             Rooms = [.. jsonConfig.Where(c => !IgnoredRoomsIds.Contains(c.Id))];
             AllRooms = jsonConfig;
 

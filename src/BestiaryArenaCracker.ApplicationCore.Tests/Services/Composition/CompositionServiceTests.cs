@@ -44,7 +44,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
                 }
             };
 
-            _roomConfigProvider.Rooms.Returns([room]);
+            _roomConfigProvider.AllRooms.Returns([room]);
             _compositionRepository.GetNextAvailableCompositionAsync(room.Id, Arg.Any<int>()).Returns(composition);
             _compositionRepository.GetMonstersByCompositionIdAsync(composition.Id).Returns(monsters);
             _compositionRepository.GetResultsCountAsync(composition.Id).Returns(0);
@@ -110,6 +110,67 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
             // You can add assertions here based on how many times AddCompositionAsync/AddMonstersAsync were called, etc.
             await _compositionRepository.Received().AddCompositionAsync(Arg.Any<CompositionEntity>());
             await _compositionRepository.Received().AddMonstersAsync(Arg.Any<int>(), Arg.Any<IEnumerable<CompositionMonstersEntity>>());
+        }
+
+        [Test]
+        public async Task ShouldNotGenerateOneCreatureCompositionsIfTheCreatureIsUseslessSoloAndTheRoomAllowMultipleCreatures()
+        {
+            var data = new Data
+            {
+                Hitboxes = [false],
+                Actors = []
+            };
+
+            var room = new RoomConfig { Id = "rkboat", MaxTeamSize = 2, File = new Domain.Room.File { Name = "Amber's Raft", Data = data } };
+            _roomConfigProvider.Rooms.Returns([room]);
+            _compositionRepository.CompositionExistsAsync(room.Id, Arg.Any<string>()).Returns(false);
+
+            var cts = new CancellationTokenSource();
+
+            _compositionRepository.AddCompositionAsync(Arg.Any<CompositionEntity>()).Returns(call =>
+            {
+                var entity = call.Arg<CompositionEntity>();
+                entity.Id = 123;
+                return entity;
+            });
+
+            _compositionRepository.AddMonstersAsync(Arg.Any<int>(), Arg.Any<IEnumerable<CompositionMonstersEntity>>())
+                .Returns(call =>
+                {
+                    cts.Cancel(); // Cancel after adding monsters
+                    return Task.CompletedTask;
+                });
+
+            var service = new CompositionService(_roomConfigProvider, _compositionRepository);
+
+            await service.GenerateAllCompositionsForRoomAsync(room, cts.Token);
+
+            // assert
+            await Assert.MultipleAsync(async () =>
+            {
+                await _compositionRepository.Received(1).AddCompositionAsync(Arg.Any<CompositionEntity>());
+                await _compositionRepository.Received(1).AddMonstersAsync(
+                    Arg.Any<int>(),
+                    Arg.Is<IEnumerable<CompositionMonstersEntity>>(monsters => IsNotSoloUseless(monsters))
+                );
+            });
+        }
+
+        // Fix the predicate to return true for non-solo-useless creatures
+        private static bool IsNotSoloUseless(IEnumerable<CompositionMonstersEntity> monsters)
+        {
+            var list = monsters.ToList();
+            if (list.Count != 1)
+                return false;
+
+            var soloUselessNames = typeof(Creatures)
+                .GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
+                .Where(f => f.GetCustomAttributes(typeof(Domain.Attributes.SoloUselessAttribute), false).Length != 0)
+                .Select(f => f.Name)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            // Return true if NOT solo useless
+            return !soloUselessNames.Contains(list[0].Name);
         }
     }
 }
