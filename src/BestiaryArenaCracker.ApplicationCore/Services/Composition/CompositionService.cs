@@ -53,8 +53,8 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
 
                     await Task.WhenAll(monstersTask, resultsCountTask);
 
-                    var monsters = await monstersTask;
-                    var resultsCount = await resultsCountTask;
+                    var monsters = monstersTask.Result;
+                    var resultsCount = resultsCountTask.Result;
 
                     return new CompositionResult
                     {
