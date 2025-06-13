@@ -7,6 +7,10 @@ var bestiaryArenaCrackerSql = builder
     .PublishAsConnectionString()
     .AddDatabase("BestiaryArenaCracker");
 
+var BestiaryArenaCrackerRedis = builder
+    .AddRedis("BestiaryArenaCrackerRedis")
+    .WithRedisInsight();
+
 builder
     .AddProject<Projects.BestiaryArenaCracker_MigrationService>("bestiaryarenacracker-migrationservice")
     .WithReference(bestiaryArenaCrackerSql)
@@ -15,7 +19,9 @@ builder
 var bestiaryArenaCrackerApi = builder
     .AddProject<Projects.BestiaryArenaCracker_Api>("bestiaryarenacracker-api")
     .WithReference(bestiaryArenaCrackerSql)
-    .WaitFor(bestiaryArenaCrackerSql);
+    .WithReference(BestiaryArenaCrackerRedis)
+    .WaitFor(bestiaryArenaCrackerSql)
+    .WaitFor(BestiaryArenaCrackerRedis);
 
 
 builder.

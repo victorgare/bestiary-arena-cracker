@@ -7,11 +7,15 @@ using BestiaryArenaCracker.Domain.Constants;
 using BestiaryArenaCracker.Domain.Entities;
 using BestiaryArenaCracker.Domain.Extensions;
 using BestiaryArenaCracker.Domain.Room;
+using StackExchange.Redis;
 using System.Security.Cryptography;
 
 namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
 {
-    public class CompositionService(IRoomConfigProvider roomConfigProvider, ICompositionRepository compositionRepository) : ICompositionService
+    public class CompositionService(
+        IRoomConfigProvider roomConfigProvider,
+        ICompositionRepository compositionRepository,
+        IConnectionMultiplexer connectionMultiplexer) : ICompositionService
     {
         public async Task<CompositionResult?> FindCompositionAsync()
         {
