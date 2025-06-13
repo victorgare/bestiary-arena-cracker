@@ -61,6 +61,10 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
                 .Returns(composition);
             _compositionRepository.GetMonstersByCompositionIdAsync(composition.Id).Returns(monsters);
             _compositionRepository.GetResultsCountAsync(composition.Id).Returns(0);
+            var db = Substitute.For<IDatabase>();
+            db.StringSetAsync(Arg.Any<RedisKey>(), Arg.Any<RedisValue>(), Arg.Any<TimeSpan?>(), When.NotExists, Arg.Any<CommandFlags>())
+                .Returns(true);
+            _connectionMultiplexer.GetDatabase().Returns(db);
 
             var service = new CompositionService(_roomConfigProvider, _compositionRepository, _connectionMultiplexer);
 
@@ -88,6 +92,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
             _compositionRepository
                 .GetNextAvailableCompositionAsync(room.Id, Arg.Any<int>(), Arg.Any<IReadOnlySet<int>>())
                 .Returns((CompositionEntity?)null);
+            _connectionMultiplexer.GetDatabase().Returns(Substitute.For<IDatabase>());
 
             var service = new CompositionService(_roomConfigProvider, _compositionRepository, _connectionMultiplexer);
 
