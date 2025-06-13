@@ -84,7 +84,7 @@ export default function Home() {
             Overall Progress
           </h2>
           <ProgressBar
-            label="Total Runs"
+            label="Total compositions cracked"
             value={totalRuns}
             max={totalPossibilities}
             percent={percent}
