@@ -5,6 +5,7 @@ using BestiaryArenaCracker.Domain;
 using BestiaryArenaCracker.Domain.Entities;
 using BestiaryArenaCracker.Domain.Room;
 using NSubstitute;
+using System.Security.Cryptography;
 
 namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
 {
@@ -155,6 +156,84 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
                     Arg.Is<IEnumerable<CompositionMonstersEntity>>(monsters => IsNotSoloUseless(monsters))
                 );
             });
+        }
+
+        [Test]
+        public async Task GenerateAllCompositionsForRoomAsync_StoresExpectedCompositionData()
+        {
+            var data = new Data
+            {
+                Hitboxes = [false, false],
+                Actors = []
+            };
+
+            var room = new RoomConfig { Id = "rkboat", MaxTeamSize = 1, File = new Domain.Room.File { Name = "Amber's Raft", Data = data } };
+            _roomConfigProvider.Rooms.Returns([room]);
+
+            CompositionEntity? storedEntity = null;
+            IEnumerable<CompositionMonstersEntity>? storedMonsters = null;
+
+            _compositionRepository.CompositionExistsAsync(room.Id, Arg.Any<string>()).Returns(false);
+            _compositionRepository.AddCompositionAsync(Arg.Any<CompositionEntity>()).Returns(call =>
+            {
+                storedEntity = call.Arg<CompositionEntity>();
+                storedEntity.Id = 1;
+                return storedEntity;
+            });
+
+            var cts = new CancellationTokenSource();
+
+            _compositionRepository.AddMonstersAsync(Arg.Any<int>(), Arg.Any<IEnumerable<CompositionMonstersEntity>>())
+                .Returns(call =>
+                {
+                    storedMonsters = call.Arg<IEnumerable<CompositionMonstersEntity>>();
+                    cts.Cancel();
+                    return Task.CompletedTask;
+                });
+
+            var service = new CompositionService(_roomConfigProvider, _compositionRepository);
+
+            await service.GenerateAllCompositionsForRoomAsync(room, cts.Token);
+
+            var monster = storedMonsters!.Single();
+            var raw = $"{room.Id}:" +
+                      $"{monster.Name}-0-{monster.Hitpoints}-{monster.Attack}-{monster.AbilityPower}-{monster.Armor}-{monster.MagicResistance}-{monster.Level}-{monster.Equipment}-{monster.EquipmentStat}-{monster.EquipmentTier}";
+            var expectedHash = Convert.ToBase64String(SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(raw)));
+
+            await Assert.MultipleAsync(async () =>
+            {
+                await _compositionRepository.Received(1).AddCompositionAsync(Arg.Any<CompositionEntity>());
+                Assert.That(storedEntity!.RoomId, Is.EqualTo(room.Id));
+                Assert.That(storedEntity.CompositionHash, Is.EqualTo(expectedHash));
+
+                await _compositionRepository.Received(1).AddMonstersAsync(1, Arg.Any<IEnumerable<CompositionMonstersEntity>>());
+                Assert.That(monster.Name, Is.EqualTo(Creatures.Bear.ToString()));
+                Assert.That(monster.TileLocation, Is.EqualTo(0));
+                Assert.That(monster.Equipment, Is.EqualTo(Equipments.DwarvenLegs));
+                Assert.That(monster.EquipmentStat, Is.EqualTo(EquipmentStat.Hitpoints));
+            });
+        }
+
+        [Test]
+        public async Task GenerateAllCompositionsForRoomAsync_DoesNotCreateWhenHashExists()
+        {
+            var data = new Data
+            {
+                Hitboxes = [false],
+                Actors = []
+            };
+
+            var room = new RoomConfig { Id = "rkboat", MaxTeamSize = 1, File = new Domain.Room.File { Name = "Amber's Raft", Data = data } };
+            _roomConfigProvider.Rooms.Returns([room]);
+
+            _compositionRepository.CompositionExistsAsync(room.Id, Arg.Any<string>()).Returns(true);
+
+            var service = new CompositionService(_roomConfigProvider, _compositionRepository);
+
+            await service.GenerateAllCompositionsForRoomAsync(room);
+
+            await _compositionRepository.DidNotReceive().AddCompositionAsync(Arg.Any<CompositionEntity>());
+            await _compositionRepository.DidNotReceive().AddMonstersAsync(Arg.Any<int>(), Arg.Any<IEnumerable<CompositionMonstersEntity>>());
         }
 
         // Fix the predicate to return true for non-solo-useless creatures
