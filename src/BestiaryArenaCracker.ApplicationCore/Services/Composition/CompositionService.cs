@@ -17,15 +17,16 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
         ICompositionRepository compositionRepository,
         IConnectionMultiplexer connectionMultiplexer) : ICompositionService
     {
-        public async Task<CompositionResult?> FindCompositionAsync()
+        public async Task<IReadOnlyList<CompositionResult>> FindCompositionAsync(int count = 1)
         {
             var allRoomsExceptBoosted = roomConfigProvider.AllRooms.Where(c => !roomConfigProvider.BoostedRoomId.Contains(c.Id));
             var excludedIds = new HashSet<int>();
             var db = connectionMultiplexer.GetDatabase();
+            var results = new List<CompositionResult>();
 
             foreach (var room in allRoomsExceptBoosted)
             {
-                while (true)
+                while (results.Count < count)
                 {
                     var composition = await compositionRepository.GetNextAvailableCompositionAsync(
                         room.Id,
@@ -50,7 +51,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
                     var monsters = await compositionRepository.GetMonstersByCompositionIdAsync(composition.Id);
                     var resultsCount = await compositionRepository.GetResultsCountAsync(composition.Id);
 
-                    return new CompositionResult
+                    results.Add(new CompositionResult
                     {
                         CompositionId = composition.Id,
                         RemainingRuns = ConfigurationConstants.DefaultMinimumCompositionRuns - resultsCount,
@@ -78,11 +79,14 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
                                 }
                             })]
                         }
-                    };
+                    });
                 }
+
+                if (results.Count >= count)
+                    break;
             }
 
-            return null;
+            return results;
         }
 
         // Public method for the worker to generate all compositions for a room

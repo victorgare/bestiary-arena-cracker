@@ -9,16 +9,16 @@ namespace BestiaryArenaCracker.Api.Controllers
     public class CompositionController(ICompositionService compositionService) : ControllerBase
     {
         [HttpGet]
-        public async Task<IActionResult> GetComposition()
+        public async Task<IActionResult> GetComposition([FromQuery] int count = 1)
         {
-            var result = await compositionService.FindCompositionAsync();
+            var results = await compositionService.FindCompositionAsync(count);
 
-            if (result == null)
+            if (results.Count == 0)
             {
                 return NoContent();
             }
 
-            return Ok(result);
+            return Ok(results);
         }
 
         [HttpPost("{compositionId}")]

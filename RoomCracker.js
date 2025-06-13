@@ -19,6 +19,7 @@ const STATES = {
   victory: "victory",
 };
 const DEFAULT_TICK_INTERVAL_MS = 62.5;
+const BATCH_SIZE = 5;
 
 function updateButtonState() {
   api.ui.updateButton(ROOM_CRACKER_ID, {
@@ -27,8 +28,8 @@ function updateButtonState() {
   });
 }
 
-async function getComposition() {
-  const getCompositionUrl = `${defaultConfig.baseUrl}/composition`;
+async function getComposition(count = 1) {
+  const getCompositionUrl = `${defaultConfig.baseUrl}/composition?count=${count}`;
   const response = await fetch(getCompositionUrl);
   if (!response.ok) {
     throw new Error(`Response status: ${response.status}`);
@@ -177,12 +178,14 @@ async function startCracking() {
   await sleep(50);
   enableTurbo();
   try {
-    let nextComposition = getComposition();
+    let nextBatch = getComposition(BATCH_SIZE);
     while (defaultConfig.enabled) {
-      const { compositionId, remainingRuns, composition } =
-        await nextComposition;
-      nextComposition = getComposition();
-      const results = [];
+      const compositions = await nextBatch;
+      nextBatch = getComposition(BATCH_SIZE);
+
+      for (const { compositionId, remainingRuns, composition } of compositions) {
+        if (!defaultConfig.enabled) break;
+        const results = [];
 
       $configureBoard(composition);
 
@@ -231,6 +234,7 @@ async function startCracking() {
 
       console.log(`sending ${results.length} to server`);
       await sendResults(compositionId, results);
+    }
     }
   } catch (error) {
     console.error(error);
