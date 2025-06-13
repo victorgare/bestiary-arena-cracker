@@ -62,7 +62,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
             _compositionRepository.GetMonstersByCompositionIdAsync(composition.Id).Returns(Task.FromResult(monsters));
             _compositionRepository.GetResultsCountAsync(composition.Id).Returns(Task.FromResult(0));
             var db = Substitute.For<IDatabase>();
-            db.StringSetAsync(Arg.Any<RedisKey>(), Arg.Any<RedisValue>(), Arg.Any<TimeSpan?>(), When.NotExists, Arg.Any<CommandFlags>())
+            db.StringSetAsync(Arg.Any<RedisKey>(), Arg.Any<RedisValue>(), Arg.Any<TimeSpan?>(), When.NotExists)
                 .Returns(Task.FromResult(true));
             _connectionMultiplexer.GetDatabase().Returns(db);
 
@@ -282,7 +282,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
 
             var db = Substitute.For<IDatabase>();
             var reservationCount = new Dictionary<int, int>();
-            db.StringSetAsync(Arg.Any<RedisKey>(), Arg.Any<RedisValue>(), Arg.Any<TimeSpan?>(), When.NotExists, Arg.Any<CommandFlags>())
+            db.StringSetAsync(Arg.Any<RedisKey>(), Arg.Any<RedisValue>(), Arg.Any<TimeSpan?>(), When.NotExists)
                 .Returns(call =>
                 {
                     var key = (string)call.ArgAt<RedisKey>(0);
