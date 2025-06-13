@@ -6,7 +6,7 @@ const defaultConfig = {
   enabled: false,
   unsubscribe: () => console.log("nothing to unsub"),
   baseUrl: "https://localhost:7284",
-  internalInterval: 0.000001,
+  internalInterval: 0.0001,
   turboActive: false,
   turboSubscription: null,
 };
