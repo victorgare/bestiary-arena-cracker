@@ -3,6 +3,7 @@ using BestiaryArenaCracker.Repository.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,7 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BestiaryArenaCracker.Repository.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250613115000_AddRoomIdIndex")]
+    partial class AddRoomIdIndex
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
