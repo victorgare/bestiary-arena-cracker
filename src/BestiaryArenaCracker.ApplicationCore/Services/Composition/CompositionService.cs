@@ -47,14 +47,8 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
                         continue;
                     }
 
-                    // Retrieve monsters and results count concurrently to reduce latency
-                    var monstersTask = compositionRepository.GetMonstersByCompositionIdAsync(composition.Id);
-                    var resultsCountTask = compositionRepository.GetResultsCountAsync(composition.Id);
-
-                    await Task.WhenAll(monstersTask, resultsCountTask);
-
-                    var monsters = monstersTask.Result;
-                    var resultsCount = resultsCountTask.Result;
+                    var monsters = await compositionRepository.GetMonstersByCompositionIdAsync(composition.Id);
+                    var resultsCount = await compositionRepository.GetResultsCountAsync(composition.Id);
 
                     return new CompositionResult
                     {
