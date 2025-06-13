@@ -4,6 +4,7 @@ using BestiaryArenaCracker.ApplicationCore.Services.Dashboards;
 using BestiaryArenaCracker.Domain.Dashboards;
 using BestiaryArenaCracker.Domain.Room;
 using NSubstitute;
+using File = BestiaryArenaCracker.Domain.Room.File;
 
 namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Dashboards;
 

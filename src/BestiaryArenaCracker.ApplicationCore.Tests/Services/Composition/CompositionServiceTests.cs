@@ -5,6 +5,7 @@ using BestiaryArenaCracker.Domain;
 using BestiaryArenaCracker.Domain.Entities;
 using BestiaryArenaCracker.Domain.Room;
 using NSubstitute;
+using StackExchange.Redis;
 using System.Security.Cryptography;
 
 namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
@@ -13,6 +14,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
     {
         private IRoomConfigProvider _roomConfigProvider = null!;
         private ICompositionRepository _compositionRepository = null!;
+        private IConnectionMultiplexer _connectionMultiplexer = null!;
 
         [SetUp]
         public void Setup()
@@ -20,6 +22,13 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
             _roomConfigProvider = Substitute.For<IRoomConfigProvider>();
             _roomConfigProvider.BoostedRoomId.Returns(new HashSet<string>());
             _compositionRepository = Substitute.For<ICompositionRepository>();
+            _connectionMultiplexer = Substitute.For<IConnectionMultiplexer>();
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            _connectionMultiplexer?.Dispose();
         }
 
         [Test]
@@ -51,7 +60,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
             _compositionRepository.GetMonstersByCompositionIdAsync(composition.Id).Returns(monsters);
             _compositionRepository.GetResultsCountAsync(composition.Id).Returns(0);
 
-            var service = new CompositionService(_roomConfigProvider, _compositionRepository);
+            var service = new CompositionService(_roomConfigProvider, _compositionRepository, _connectionMultiplexer);
 
             var result = await service.FindCompositionAsync();
 
@@ -76,7 +85,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
             _roomConfigProvider.Rooms.Returns([room]);
             _compositionRepository.GetNextAvailableCompositionAsync(room.Id, Arg.Any<int>()).Returns((CompositionEntity?)null);
 
-            var service = new CompositionService(_roomConfigProvider, _compositionRepository);
+            var service = new CompositionService(_roomConfigProvider, _compositionRepository, _connectionMultiplexer);
 
             var result = await service.FindCompositionAsync();
 
@@ -104,7 +113,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
             _compositionRepository.AddMonstersAsync(Arg.Any<int>(), Arg.Any<IEnumerable<CompositionMonstersEntity>>())
                 .Returns(Task.CompletedTask);
 
-            var service = new CompositionService(_roomConfigProvider, _compositionRepository);
+            var service = new CompositionService(_roomConfigProvider, _compositionRepository, _connectionMultiplexer);
 
             // This will generate all possible compositions for the room
             await service.GenerateAllCompositionsForRoomAsync(room);
@@ -143,7 +152,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
                     return Task.CompletedTask;
                 });
 
-            var service = new CompositionService(_roomConfigProvider, _compositionRepository);
+            var service = new CompositionService(_roomConfigProvider, _compositionRepository, _connectionMultiplexer);
 
             await service.GenerateAllCompositionsForRoomAsync(room, cts.Token);
 
@@ -191,7 +200,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
                     return Task.CompletedTask;
                 });
 
-            var service = new CompositionService(_roomConfigProvider, _compositionRepository);
+            var service = new CompositionService(_roomConfigProvider, _compositionRepository, _connectionMultiplexer);
 
             await service.GenerateAllCompositionsForRoomAsync(room, cts.Token);
 
@@ -228,7 +237,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
 
             _compositionRepository.CompositionExistsAsync(room.Id, Arg.Any<string>()).Returns(true);
 
-            var service = new CompositionService(_roomConfigProvider, _compositionRepository);
+            var service = new CompositionService(_roomConfigProvider, _compositionRepository, _connectionMultiplexer);
 
             await service.GenerateAllCompositionsForRoomAsync(room);
 
