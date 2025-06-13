@@ -56,9 +56,15 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
             };
 
             _roomConfigProvider.AllRooms.Returns([room]);
-            _compositionRepository.GetNextAvailableCompositionAsync(room.Id, Arg.Any<int>()).Returns(composition);
-            _compositionRepository.GetMonstersByCompositionIdAsync(composition.Id).Returns(monsters);
-            _compositionRepository.GetResultsCountAsync(composition.Id).Returns(0);
+            _compositionRepository
+                .GetNextAvailableCompositionAsync(room.Id, Arg.Any<int>(), Arg.Any<IReadOnlySet<int>>())
+                .Returns(Task.FromResult<CompositionEntity?>(composition));
+            _compositionRepository.GetMonstersByCompositionIdAsync(composition.Id).Returns(Task.FromResult(monsters));
+            _compositionRepository.GetResultsCountAsync(composition.Id).Returns(Task.FromResult(0));
+            var db = Substitute.For<IDatabase>();
+            db.StringSetAsync(Arg.Any<RedisKey>(), Arg.Any<RedisValue>(), Arg.Any<TimeSpan?>(), When.NotExists)
+                .Returns(Task.FromResult(true));
+            _connectionMultiplexer.GetDatabase().Returns(db);
 
             var service = new CompositionService(_roomConfigProvider, _compositionRepository, _connectionMultiplexer);
 
@@ -83,7 +89,10 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
         {
             var room = new RoomConfig { Id = "rkboat", MaxTeamSize = 1, File = new Domain.Room.File { Name = "Amber's Raft", Data = new Data() } };
             _roomConfigProvider.Rooms.Returns([room]);
-            _compositionRepository.GetNextAvailableCompositionAsync(room.Id, Arg.Any<int>()).Returns((CompositionEntity?)null);
+            _compositionRepository
+                .GetNextAvailableCompositionAsync(room.Id, Arg.Any<int>(), Arg.Any<IReadOnlySet<int>>())
+                .Returns(Task.FromResult<CompositionEntity?>(null));
+            _connectionMultiplexer.GetDatabase().Returns(Substitute.For<IDatabase>());
 
             var service = new CompositionService(_roomConfigProvider, _compositionRepository, _connectionMultiplexer);
 
@@ -103,12 +112,12 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
 
             var room = new RoomConfig { Id = "rkboat", MaxTeamSize = 1, File = new Domain.Room.File { Name = "Amber's Raft", Data = data } };
             _roomConfigProvider.Rooms.Returns([room]);
-            _compositionRepository.CompositionExistsAsync(room.Id, Arg.Any<string>()).Returns(false);
+            _compositionRepository.CompositionExistsAsync(room.Id, Arg.Any<string>()).Returns(Task.FromResult(false));
             _compositionRepository.AddCompositionAsync(Arg.Any<CompositionEntity>()).Returns(call =>
             {
                 var entity = call.Arg<CompositionEntity>();
                 entity.Id = 123;
-                return entity;
+                return Task.FromResult(entity);
             });
             _compositionRepository.AddMonstersAsync(Arg.Any<int>(), Arg.Any<IEnumerable<CompositionMonstersEntity>>())
                 .Returns(Task.CompletedTask);
@@ -134,7 +143,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
 
             var room = new RoomConfig { Id = "rkboat", MaxTeamSize = 2, File = new Domain.Room.File { Name = "Amber's Raft", Data = data } };
             _roomConfigProvider.Rooms.Returns([room]);
-            _compositionRepository.CompositionExistsAsync(room.Id, Arg.Any<string>()).Returns(false);
+            _compositionRepository.CompositionExistsAsync(room.Id, Arg.Any<string>()).Returns(Task.FromResult(false));
 
             var cts = new CancellationTokenSource();
 
@@ -142,7 +151,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
             {
                 var entity = call.Arg<CompositionEntity>();
                 entity.Id = 123;
-                return entity;
+                return Task.FromResult(entity);
             });
 
             _compositionRepository.AddMonstersAsync(Arg.Any<int>(), Arg.Any<IEnumerable<CompositionMonstersEntity>>())
@@ -182,12 +191,12 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
             CompositionEntity? storedEntity = null;
             IEnumerable<CompositionMonstersEntity>? storedMonsters = null;
 
-            _compositionRepository.CompositionExistsAsync(room.Id, Arg.Any<string>()).Returns(false);
+            _compositionRepository.CompositionExistsAsync(room.Id, Arg.Any<string>()).Returns(Task.FromResult(false));
             _compositionRepository.AddCompositionAsync(Arg.Any<CompositionEntity>()).Returns(call =>
             {
                 storedEntity = call.Arg<CompositionEntity>();
                 storedEntity.Id = 1;
-                return storedEntity;
+                return Task.FromResult(storedEntity);
             });
 
             var cts = new CancellationTokenSource();
@@ -235,7 +244,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
             var room = new RoomConfig { Id = "rkboat", MaxTeamSize = 1, File = new Domain.Room.File { Name = "Amber's Raft", Data = data } };
             _roomConfigProvider.Rooms.Returns([room]);
 
-            _compositionRepository.CompositionExistsAsync(room.Id, Arg.Any<string>()).Returns(true);
+            _compositionRepository.CompositionExistsAsync(room.Id, Arg.Any<string>()).Returns(Task.FromResult(true));
 
             var service = new CompositionService(_roomConfigProvider, _compositionRepository, _connectionMultiplexer);
 
@@ -243,6 +252,59 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
 
             await _compositionRepository.DidNotReceive().AddCompositionAsync(Arg.Any<CompositionEntity>());
             await _compositionRepository.DidNotReceive().AddMonstersAsync(Arg.Any<int>(), Arg.Any<IEnumerable<CompositionMonstersEntity>>());
+        }
+
+        [Test]
+        public async Task FindCompositionAsync_ConcurrentRequests_DoNotReturnSameId()
+        {
+            var room = new RoomConfig { Id = "rkboat", MaxTeamSize = 1, File = new Domain.Room.File { Name = "Amber's Raft", Data = new Data() } };
+            _roomConfigProvider.AllRooms.Returns([room]);
+
+            var c1 = new CompositionEntity { Id = 1, RoomId = room.Id };
+            var c2 = new CompositionEntity { Id = 2, RoomId = room.Id };
+
+            var queue = new Queue<CompositionEntity?>(new[] { c1, c2 });
+            _compositionRepository
+                .GetNextAvailableCompositionAsync(room.Id, Arg.Any<int>(), Arg.Any<IReadOnlySet<int>>())
+                .Returns(call =>
+                {
+                    var excluded = call.ArgAt<IReadOnlySet<int>>(2);
+                    while (queue.Count > 0 && queue.Peek() is { } next && excluded.Contains(next.Id))
+                    {
+                        queue.Dequeue();
+                    }
+
+                    return Task.FromResult(queue.Count > 0 ? queue.Dequeue() : null);
+                });
+
+            _compositionRepository.GetMonstersByCompositionIdAsync(Arg.Any<int>()).Returns(Task.FromResult(Array.Empty<CompositionMonstersEntity>()));
+            _compositionRepository.GetResultsCountAsync(Arg.Any<int>()).Returns(Task.FromResult(0));
+
+            var db = Substitute.For<IDatabase>();
+            var reservationCount = new Dictionary<int, int>();
+            db.StringSetAsync(Arg.Any<RedisKey>(), Arg.Any<RedisValue>(), Arg.Any<TimeSpan?>(), When.NotExists)
+                .Returns(call =>
+                {
+                    var key = (string)call.ArgAt<RedisKey>(0);
+                    var id = int.Parse(key.Split(':')[1]);
+                    if (!reservationCount.ContainsKey(id))
+                    {
+                        reservationCount[id] = 1;
+                        return Task.FromResult(true);
+                    }
+                    reservationCount[id]++;
+                    return Task.FromResult(false);
+                });
+            _connectionMultiplexer.GetDatabase().Returns(db);
+
+            var service1 = new CompositionService(_roomConfigProvider, _compositionRepository, _connectionMultiplexer);
+            var service2 = new CompositionService(_roomConfigProvider, _compositionRepository, _connectionMultiplexer);
+
+            var results = await Task.WhenAll(service1.FindCompositionAsync(), service2.FindCompositionAsync());
+
+            Assert.That(results[0], Is.Not.Null, "first result should not be null");
+            Assert.That(results[1], Is.Not.Null, "second result should not be null");
+            Assert.That(results![0]!.CompositionId, Is.Not.EqualTo(results[1]!.CompositionId));
         }
 
         // Fix the predicate to return true for non-solo-useless creatures
