@@ -36,12 +36,17 @@ namespace BestiaryArenaCracker.Repository.Repositories
 
         public Task<bool> CompositionExistsAsync(string roomId, string hash)
         {
-            return dbContext.Compositions.AnyAsync(c => c.CompositionHash == hash && c.RoomId == roomId);
+            return dbContext.Compositions
+                .AsNoTracking()
+                .AnyAsync(c => c.CompositionHash == hash && c.RoomId == roomId);
         }
 
         public Task<CompositionMonstersEntity[]> GetMonstersByCompositionIdAsync(int compositionId)
         {
-            return dbContext.CompositionMonsters.Where(m => m.CompositionId == compositionId).ToArrayAsync();
+            return dbContext.CompositionMonsters
+                .AsNoTracking()
+                .Where(m => m.CompositionId == compositionId)
+                .ToArrayAsync();
         }
 
         public Task<CompositionEntity?> GetNextAvailableCompositionAsync(string roomId, int maxResults)
@@ -52,15 +57,20 @@ namespace BestiaryArenaCracker.Repository.Repositories
         public Task<CompositionEntity?> GetNextAvailableCompositionAsync(string roomId, int maxResults, IReadOnlySet<int> excludedIds)
         {
             return dbContext.Compositions
+                .AsNoTracking()
                 .Where(c => c.RoomId == roomId && !excludedIds.Contains(c.Id))
                 .OrderBy(c => c.Id)
                 .FirstOrDefaultAsync(c =>
-                    dbContext.CompositionResults.Count(r => r.CompositionId == c.Id) < maxResults);
+                    dbContext.CompositionResults
+                        .AsNoTracking()
+                        .Count(r => r.CompositionId == c.Id) < maxResults);
         }
 
         public Task<int> GetResultsCountAsync(int compositionId)
         {
-            return dbContext.CompositionResults.CountAsync(r => r.CompositionId == compositionId);
+            return dbContext.CompositionResults
+                .AsNoTracking()
+                .CountAsync(r => r.CompositionId == compositionId);
         }
     }
 }
