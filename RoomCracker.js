@@ -182,10 +182,11 @@ async function startCracking() {
   await sleep(50);
   enableTurbo();
 
-  do {
+  let nextComposition = getComposition();
+  while (defaultConfig.enabled) {
     try {
-      const { compositionId, remainingRuns, composition } =
-        await getComposition();
+      const { compositionId, remainingRuns, composition } = await nextComposition;
+      nextComposition = getComposition();
       const results = [];
 
       $configureBoard(composition);
@@ -240,7 +241,7 @@ async function startCracking() {
       defaultConfig.enabled = false;
       updateButtonState();
     }
-  } while (defaultConfig.enabled);
+  }
 
   disableTurbo();
   setGameBoardDisplay(true);
