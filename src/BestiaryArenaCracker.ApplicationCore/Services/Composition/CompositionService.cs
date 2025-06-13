@@ -20,46 +20,66 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
         public async Task<CompositionResult?> FindCompositionAsync()
         {
             var allRoomsExceptBoosted = roomConfigProvider.AllRooms.Where(c => !roomConfigProvider.BoostedRoomId.Contains(c.Id));
+            var excludedIds = new HashSet<int>();
+            var db = connectionMultiplexer.GetDatabase();
 
             foreach (var room in allRoomsExceptBoosted)
             {
-                var composition = await compositionRepository.GetNextAvailableCompositionAsync(room.Id, ConfigurationConstants.DefaultMinimumCompositionRuns);
-
-                if (composition == null)
-                    continue;
-
-                var monsters = await compositionRepository.GetMonstersByCompositionIdAsync(composition.Id);
-                var resultsCount = await compositionRepository.GetResultsCountAsync(composition.Id);
-
-                return new CompositionResult
+                while (true)
                 {
-                    CompositionId = composition.Id,
-                    RemainingRuns = ConfigurationConstants.DefaultMinimumCompositionRuns - resultsCount,
-                    Composition = new Domain.Composition.Composition
+                    var composition = await compositionRepository.GetNextAvailableCompositionAsync(
+                        room.Id,
+                        ConfigurationConstants.DefaultMinimumCompositionRuns,
+                        excludedIds);
+
+                    if (composition == null)
+                        break;
+
+                    var reserved = await db.StringSetAsync(
+                        $"composition:{composition.Id}:reserved",
+                        "1",
+                        TimeSpan.FromSeconds(15),
+                        When.NotExists);
+
+                    if (!reserved)
                     {
-                        Map = room.Name,
-                        Board = [.. monsters.Select(m => new Board
-                    {
-                        Tile = m.TileLocation,
-                        Monster = new Monster
-                        {
-                            Name = m.Name.ToDisplayName(),
-                            Hp = m.Hitpoints,
-                            Ad = m.Attack,
-                            Ap = m.AbilityPower,
-                            Armor = m.Armor,
-                            MagicResist = m.MagicResistance,
-                            Level = m.Level
-                        },
-                        Equipment = new Equipment
-                        {
-                            Name = m.Equipment.GetDescription(),
-                            Stat = m.EquipmentStat.GetDescription(),
-                            Tier = m.EquipmentTier
-                        }
-                    })]
+                        excludedIds.Add(composition.Id);
+                        continue;
                     }
-                };
+
+                    var monsters = await compositionRepository.GetMonstersByCompositionIdAsync(composition.Id);
+                    var resultsCount = await compositionRepository.GetResultsCountAsync(composition.Id);
+
+                    return new CompositionResult
+                    {
+                        CompositionId = composition.Id,
+                        RemainingRuns = ConfigurationConstants.DefaultMinimumCompositionRuns - resultsCount,
+                        Composition = new Domain.Composition.Composition
+                        {
+                            Map = room.Name,
+                            Board = [.. monsters.Select(m => new Board
+                            {
+                                Tile = m.TileLocation,
+                                Monster = new Monster
+                                {
+                                    Name = m.Name.ToDisplayName(),
+                                    Hp = m.Hitpoints,
+                                    Ad = m.Attack,
+                                    Ap = m.AbilityPower,
+                                    Armor = m.Armor,
+                                    MagicResist = m.MagicResistance,
+                                    Level = m.Level
+                                },
+                                Equipment = new Equipment
+                                {
+                                    Name = m.Equipment.GetDescription(),
+                                    Stat = m.EquipmentStat.GetDescription(),
+                                    Tier = m.EquipmentTier
+                                }
+                            })]
+                        }
+                    };
+                }
             }
 
             return null!;
@@ -222,9 +242,11 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
         }
 
 
-        public Task AddResults(int compositionId, CompositionResultsEntity[] compositions)
+        public async Task AddResults(int compositionId, CompositionResultsEntity[] compositions)
         {
-            return compositionRepository.AddResults(compositionId, compositions);
+            await compositionRepository.AddResults(compositionId, compositions);
+            var db = connectionMultiplexer.GetDatabase();
+            await db.KeyDeleteAsync($"composition:{compositionId}:reserved");
         }
 
         // Helper: Get all combinations of a list (n choose k)

@@ -56,7 +56,9 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
             };
 
             _roomConfigProvider.AllRooms.Returns([room]);
-            _compositionRepository.GetNextAvailableCompositionAsync(room.Id, Arg.Any<int>()).Returns(composition);
+            _compositionRepository
+                .GetNextAvailableCompositionAsync(room.Id, Arg.Any<int>(), Arg.Any<IReadOnlySet<int>>())
+                .Returns(composition);
             _compositionRepository.GetMonstersByCompositionIdAsync(composition.Id).Returns(monsters);
             _compositionRepository.GetResultsCountAsync(composition.Id).Returns(0);
 
@@ -83,7 +85,9 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
         {
             var room = new RoomConfig { Id = "rkboat", MaxTeamSize = 1, File = new Domain.Room.File { Name = "Amber's Raft", Data = new Data() } };
             _roomConfigProvider.Rooms.Returns([room]);
-            _compositionRepository.GetNextAvailableCompositionAsync(room.Id, Arg.Any<int>()).Returns((CompositionEntity?)null);
+            _compositionRepository
+                .GetNextAvailableCompositionAsync(room.Id, Arg.Any<int>(), Arg.Any<IReadOnlySet<int>>())
+                .Returns((CompositionEntity?)null);
 
             var service = new CompositionService(_roomConfigProvider, _compositionRepository, _connectionMultiplexer);
 
@@ -243,6 +247,53 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
 
             await _compositionRepository.DidNotReceive().AddCompositionAsync(Arg.Any<CompositionEntity>());
             await _compositionRepository.DidNotReceive().AddMonstersAsync(Arg.Any<int>(), Arg.Any<IEnumerable<CompositionMonstersEntity>>());
+        }
+
+        [Test]
+        public async Task FindCompositionAsync_ConcurrentRequests_DoNotReturnSameId()
+        {
+            var room = new RoomConfig { Id = "rkboat", MaxTeamSize = 1, File = new Domain.Room.File { Name = "Amber's Raft", Data = new Data() } };
+            _roomConfigProvider.AllRooms.Returns([room]);
+
+            var c1 = new CompositionEntity { Id = 1, RoomId = room.Id };
+            var c2 = new CompositionEntity { Id = 2, RoomId = room.Id };
+
+            _compositionRepository
+                .GetNextAvailableCompositionAsync(room.Id, Arg.Any<int>(), Arg.Any<IReadOnlySet<int>>())
+                .Returns(call =>
+                {
+                    var excluded = call.ArgAt<IReadOnlySet<int>>(2);
+                    if (!excluded.Contains(1)) return c1;
+                    if (!excluded.Contains(2)) return c2;
+                    return null;
+                });
+
+            _compositionRepository.GetMonstersByCompositionIdAsync(Arg.Any<int>()).Returns(Array.Empty<CompositionMonstersEntity>());
+            _compositionRepository.GetResultsCountAsync(Arg.Any<int>()).Returns(0);
+
+            var db = Substitute.For<IDatabase>();
+            var reservationCount = new Dictionary<int, int>();
+            db.StringSetAsync(Arg.Any<RedisKey>(), Arg.Any<RedisValue>(), Arg.Any<TimeSpan?>(), When.NotExists, Arg.Any<CommandFlags>())
+                .Returns(call =>
+                {
+                    var key = (string)call.ArgAt<RedisKey>(0);
+                    var id = int.Parse(key.Split(':')[1]);
+                    if (!reservationCount.ContainsKey(id))
+                    {
+                        reservationCount[id] = 1;
+                        return true;
+                    }
+                    reservationCount[id]++;
+                    return false;
+                });
+            _connectionMultiplexer.GetDatabase().Returns(db);
+
+            var service1 = new CompositionService(_roomConfigProvider, _compositionRepository, _connectionMultiplexer);
+            var service2 = new CompositionService(_roomConfigProvider, _compositionRepository, _connectionMultiplexer);
+
+            var results = await Task.WhenAll(service1.FindCompositionAsync(), service2.FindCompositionAsync());
+
+            Assert.That(results![0]!.CompositionId, Is.Not.EqualTo(results[1]!.CompositionId));
         }
 
         // Fix the predicate to return true for non-solo-useless creatures

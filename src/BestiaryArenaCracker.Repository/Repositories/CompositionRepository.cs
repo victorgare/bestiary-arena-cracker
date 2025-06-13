@@ -46,8 +46,13 @@ namespace BestiaryArenaCracker.Repository.Repositories
 
         public Task<CompositionEntity?> GetNextAvailableCompositionAsync(string roomId, int maxResults)
         {
+            return GetNextAvailableCompositionAsync(roomId, maxResults, new HashSet<int>());
+        }
+
+        public Task<CompositionEntity?> GetNextAvailableCompositionAsync(string roomId, int maxResults, IReadOnlySet<int> excludedIds)
+        {
             return dbContext.Compositions
-                .Where(c => c.RoomId == roomId)
+                .Where(c => c.RoomId == roomId && !excludedIds.Contains(c.Id))
                 .OrderBy(c => c.Id)
                 .FirstOrDefaultAsync(c =>
                     dbContext.CompositionResults.Count(r => r.CompositionId == c.Id) < maxResults);
