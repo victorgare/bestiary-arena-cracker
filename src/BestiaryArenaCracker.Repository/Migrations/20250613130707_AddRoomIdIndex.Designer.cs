@@ -11,10 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BestiaryArenaCracker.Repository.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250613115000_AddRoomIdIndex")]
+    [Migration("20250613130707_AddRoomIdIndex")]
     partial class AddRoomIdIndex
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -37,7 +38,7 @@ namespace BestiaryArenaCracker.Repository.Migrations
 
                     b.Property<string>("RoomId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 

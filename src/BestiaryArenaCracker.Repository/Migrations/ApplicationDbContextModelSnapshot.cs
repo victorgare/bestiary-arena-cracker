@@ -35,7 +35,7 @@ namespace BestiaryArenaCracker.Repository.Migrations
 
                     b.Property<string>("RoomId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
