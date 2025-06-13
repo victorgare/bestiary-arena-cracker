@@ -6,7 +6,7 @@ const defaultConfig = {
   enabled: false,
   unsubscribe: () => console.log("nothing to unsub"),
   baseUrl: "https://localhost:7284",
-  speedupFactor: 1000000,
+  internalInterval: 1,
   turboActive: false,
   turboSubscription: null,
 };
@@ -56,7 +56,7 @@ function setGameBoardDisplay(display = false) {
 }
 
 // Enable turbo mode to speed up the game using the more efficient approach
-function enableTurbo(speedupFactor = defaultConfig.speedupFactor) {
+function enableTurbo(internalInterval = defaultConfig.internalInterval) {
   if (defaultConfig.turboActive) return;
 
   // Clean up any existing subscription
@@ -65,16 +65,13 @@ function enableTurbo(speedupFactor = defaultConfig.speedupFactor) {
     defaultConfig.turboSubscription = null;
   }
 
-  // Calculate the new interval
-  const interval = DEFAULT_TICK_INTERVAL_MS / speedupFactor;
-
   // Set up the subscription
   defaultConfig.turboSubscription = globalThis.state.board.on(
     "newGame",
     (event) => {
       try {
         if (event.world && event.world.tickEngine) {
-          event.world.tickEngine.setTickInterval(interval);
+          event.world.tickEngine.setTickInterval(internalInterval);
         }
       } catch (e) {
         console.warn("Could not set tick interval in newGame event:", e);
@@ -86,9 +83,7 @@ function enableTurbo(speedupFactor = defaultConfig.speedupFactor) {
   try {
     const boardContext = globalThis.state.board.getSnapshot().context;
     if (boardContext && boardContext.world && boardContext.world.tickEngine) {
-      console.log(
-        `Setting tick interval for existing game to ${interval}ms (${speedupFactor}x speed)`
-      );
+      console.log(`Setting tick interval for existing game to ${interval}ms`);
       boardContext.world.tickEngine.setTickInterval(interval);
     } else {
       console.log(
@@ -100,7 +95,7 @@ function enableTurbo(speedupFactor = defaultConfig.speedupFactor) {
   }
 
   defaultConfig.turboActive = true;
-  console.log(`Turbo mode enabled (${speedupFactor}x)`);
+  console.log(`Turbo mode enabled `);
 }
 
 function disableTurbo() {
