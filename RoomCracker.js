@@ -181,11 +181,11 @@ async function startCracking() {
   // ensure UI is updated
   await sleep(50);
   enableTurbo();
-
-  let nextComposition = getComposition();
-  while (defaultConfig.enabled) {
-    try {
-      const { compositionId, remainingRuns, composition } = await nextComposition;
+  try {
+    let nextComposition = getComposition();
+    while (defaultConfig.enabled) {
+      const { compositionId, remainingRuns, composition } =
+        await nextComposition;
       nextComposition = getComposition();
       const results = [];
 
@@ -236,13 +236,12 @@ async function startCracking() {
 
       console.log(`sending ${results.length} to server`);
       await sendResults(compositionId, results);
-    } catch (error) {
-      console.error(error);
-      defaultConfig.enabled = false;
-      updateButtonState();
     }
+  } catch (error) {
+    console.error(error);
+    defaultConfig.enabled = false;
+    updateButtonState();
   }
-
   disableTurbo();
   setGameBoardDisplay(true);
 }
