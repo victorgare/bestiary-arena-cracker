@@ -13,10 +13,12 @@ namespace BestiaryArenaCracker.Repository.Repositories
         {
             // Query base: compositions for the room
             var compositionsQuery = dbContext.Compositions
+                .AsNoTracking()
                 .Where(c => c.RoomId == roomId);
 
             // Compose stats for each composition
             var statsQuery = dbContext.CompositionResults
+                .AsNoTracking()
                 .Where(r => compositionsQuery.Select(c => c.Id).Contains(r.CompositionId))
                 .GroupBy(r => r.CompositionId)
                 .Select(g => new
@@ -31,7 +33,7 @@ namespace BestiaryArenaCracker.Repository.Repositories
 
             // Join with composition hash
             var statsWithHashQuery = from s in statsQuery
-                                     join c in dbContext.Compositions on s.CompositionId equals c.Id
+                                     join c in dbContext.Compositions.AsNoTracking() on s.CompositionId equals c.Id
                                      select new
                                      {
                                          s.CompositionId,
@@ -99,6 +101,7 @@ namespace BestiaryArenaCracker.Repository.Repositories
 
             // Fetch all monsters for these compositions in one query
             var monsters = await dbContext.CompositionMonsters
+                .AsNoTracking()
                 .Where(m => allCompIds.Contains(m.CompositionId))
                 .ToListAsync();
 
@@ -151,11 +154,14 @@ namespace BestiaryArenaCracker.Repository.Repositories
         {
             // Step 1: Get the count of results per composition, including RoomId
             var compResultsCount = dbContext.Compositions
+                .AsNoTracking()
                 .Select(c => new
                 {
                     c.Id,
                     c.RoomId,
-                    ResultsCount = dbContext.CompositionResults.Count(r => r.CompositionId == c.Id)
+                    ResultsCount = dbContext.CompositionResults
+                        .AsNoTracking()
+                        .Count(r => r.CompositionId == c.Id)
                 });
 
             // Step 2: Group by RoomId and count compositions with more than the threshold
@@ -166,14 +172,17 @@ namespace BestiaryArenaCracker.Repository.Repositories
                             RoomId = roomGroup.Key,
                             TotalResults = roomGroup.Count(x => x.ResultsCount >= ConfigurationConstants.DefaultMinimumCompositionRuns),
                             Ticks = dbContext.CompositionResults
+                                .AsNoTracking()
                                 .Where(r => roomGroup.Select(c => c.Id).Contains(r.CompositionId) && r.Victory)
                                 .OrderBy(r => r.Ticks)
                                 .Select(r => (int?)r.Ticks)
                                 .FirstOrDefault() ?? 0,
                             Points = dbContext.CompositionResults
+                                .AsNoTracking()
                                 .Where(r => roomGroup.Select(c => c.Id).Contains(r.CompositionId) && r.Victory)
                                 .Max(r => (int?)r.Points) ?? 0,
                             Grade = dbContext.CompositionResults
+                                .AsNoTracking()
                                 .Where(r => roomGroup.Select(c => c.Id).Contains(r.CompositionId) && r.Victory)
                                 .OrderByDescending(r => r.Points)
                                 .Select(r => r.Grade)
