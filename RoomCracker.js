@@ -9,6 +9,7 @@ const defaultConfig = {
   internalInterval: 0.0001,
   turboActive: false,
   turboSubscription: null,
+  batchSize: 10
 };
 
 // CONSTS
@@ -19,7 +20,6 @@ const STATES = {
   victory: "victory",
 };
 const DEFAULT_TICK_INTERVAL_MS = 62.5;
-const BATCH_SIZE = 5;
 
 function updateButtonState() {
   api.ui.updateButton(ROOM_CRACKER_ID, {
@@ -28,7 +28,7 @@ function updateButtonState() {
   });
 }
 
-async function getComposition(count = 1) {
+async function getComposition(count = defaultConfig.batchSize) {
   const getCompositionUrl = `${defaultConfig.baseUrl}/composition?count=${count}`;
   const response = await fetch(getCompositionUrl);
   if (!response.ok) {
@@ -178,10 +178,10 @@ async function startCracking() {
   await sleep(50);
   enableTurbo();
   try {
-    let nextBatch = getComposition(BATCH_SIZE);
+    let nextBatch = getComposition(defaultConfig.batchSize);
     while (defaultConfig.enabled) {
       const compositions = await nextBatch;
-      nextBatch = getComposition(BATCH_SIZE);
+      nextBatch = getComposition(defaultConfig.batchSize);
 
       for (const { compositionId, remainingRuns, composition } of compositions) {
         if (!defaultConfig.enabled) break;

@@ -39,7 +39,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
                     var reserved = await db.StringSetAsync(
                         $"composition:{composition.Id}:reserved",
                         "1",
-                        TimeSpan.FromSeconds(15),
+                        TimeSpan.FromMinutes(1),
                         When.NotExists);
 
                     if (!reserved)
