@@ -263,14 +263,18 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
             var c1 = new CompositionEntity { Id = 1, RoomId = room.Id };
             var c2 = new CompositionEntity { Id = 2, RoomId = room.Id };
 
+            var queue = new Queue<CompositionEntity?>(new[] { c1, c2 });
             _compositionRepository
                 .GetNextAvailableCompositionAsync(room.Id, Arg.Any<int>(), Arg.Any<IReadOnlySet<int>>())
                 .Returns(call =>
                 {
                     var excluded = call.ArgAt<IReadOnlySet<int>>(2);
-                    if (!excluded.Contains(1)) return Task.FromResult<CompositionEntity?>(c1);
-                    if (!excluded.Contains(2)) return Task.FromResult<CompositionEntity?>(c2);
-                    return Task.FromResult<CompositionEntity?>(null);
+                    while (queue.Count > 0 && queue.Peek() is { } next && excluded.Contains(next.Id))
+                    {
+                        queue.Dequeue();
+                    }
+
+                    return Task.FromResult(queue.Count > 0 ? queue.Dequeue() : null);
                 });
 
             _compositionRepository.GetMonstersByCompositionIdAsync(Arg.Any<int>()).Returns(Task.FromResult(Array.Empty<CompositionMonstersEntity>()));
@@ -298,6 +302,8 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
 
             var results = await Task.WhenAll(service1.FindCompositionAsync(), service2.FindCompositionAsync());
 
+            Assert.That(results[0], Is.Not.Null, "first result should not be null");
+            Assert.That(results[1], Is.Not.Null, "second result should not be null");
             Assert.That(results![0]!.CompositionId, Is.Not.EqualTo(results[1]!.CompositionId));
         }
 

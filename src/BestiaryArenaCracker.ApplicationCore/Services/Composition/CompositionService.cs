@@ -82,7 +82,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
                 }
             }
 
-            return null!;
+            return null;
         }
 
         // Public method for the worker to generate all compositions for a room
