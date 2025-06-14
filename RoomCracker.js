@@ -9,6 +9,7 @@ const defaultConfig = {
   internalInterval: 0.0001,
   turboActive: false,
   turboSubscription: null,
+  batchSize: 5
 };
 
 // CONSTS
@@ -27,8 +28,8 @@ function updateButtonState() {
   });
 }
 
-async function getComposition() {
-  const getCompositionUrl = `${defaultConfig.baseUrl}/composition`;
+async function getComposition(count = defaultConfig.batchSize) {
+  const getCompositionUrl = `${defaultConfig.baseUrl}/composition?count=${count}`;
   const response = await fetch(getCompositionUrl);
   if (!response.ok) {
     throw new Error(`Response status: ${response.status}`);
@@ -177,12 +178,14 @@ async function startCracking() {
   await sleep(50);
   enableTurbo();
   try {
-    let nextComposition = getComposition();
+    let nextBatch = getComposition(defaultConfig.batchSize);
     while (defaultConfig.enabled) {
-      const { compositionId, remainingRuns, composition } =
-        await nextComposition;
-      nextComposition = getComposition();
-      const results = [];
+      const compositions = await nextBatch;
+      nextBatch = getComposition(defaultConfig.batchSize);
+
+      for (const { compositionId, remainingRuns, composition } of compositions) {
+        if (!defaultConfig.enabled) break;
+        const results = [];
 
       $configureBoard(composition);
 
@@ -231,6 +234,7 @@ async function startCracking() {
 
       console.log(`sending ${results.length} to server`);
       await sendResults(compositionId, results);
+    }
     }
   } catch (error) {
     console.error(error);

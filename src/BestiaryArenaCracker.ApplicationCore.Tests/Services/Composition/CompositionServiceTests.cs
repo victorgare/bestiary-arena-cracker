@@ -73,8 +73,10 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
             Assert.Multiple(() =>
             {
                 Assert.That(result, Is.Not.Null);
-                Assert.That(result!.Composition.Map, Is.EqualTo("Amber's Raft"));
-                var board = result.Composition.Board.First();
+                Assert.That(result, Has.Count.EqualTo(1));
+                var first = result[0];
+                Assert.That(first.Composition.Map, Is.EqualTo("Amber's Raft"));
+                var board = first.Composition.Board.First();
                 Assert.That(board.Tile, Is.EqualTo(67));
                 Assert.That(board.Monster.Name, Is.EqualTo("minotaur mage"));
                 Assert.That(board.Monster.Hp, Is.EqualTo(20));
@@ -98,7 +100,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
 
             var result = await service.FindCompositionAsync();
 
-            Assert.That(result, Is.Null);
+            Assert.That(result, Is.Empty);
         }
 
         [Test]
@@ -302,9 +304,9 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
 
             var results = await Task.WhenAll(service1.FindCompositionAsync(), service2.FindCompositionAsync());
 
-            Assert.That(results[0], Is.Not.Null, "first result should not be null");
-            Assert.That(results[1], Is.Not.Null, "second result should not be null");
-            Assert.That(results![0]!.CompositionId, Is.Not.EqualTo(results[1]!.CompositionId));
+            Assert.That(results[0], Has.Count.EqualTo(1), "first result should contain one item");
+            Assert.That(results[1], Has.Count.EqualTo(1), "second result should contain one item");
+            Assert.That(results[0][0].CompositionId, Is.Not.EqualTo(results[1][0].CompositionId));
         }
 
         // Fix the predicate to return true for non-solo-useless creatures
