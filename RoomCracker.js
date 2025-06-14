@@ -9,7 +9,7 @@ const defaultConfig = {
   internalInterval: 0.0001,
   turboActive: false,
   turboSubscription: null,
-  batchSize: 10
+  batchSize: 5
 };
 
 // CONSTS
