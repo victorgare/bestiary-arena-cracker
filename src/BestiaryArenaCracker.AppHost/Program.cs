@@ -8,8 +8,11 @@ var bestiaryArenaCrackerSql = builder
     .AddDatabase("BestiaryArenaCracker");
 
 var BestiaryArenaCrackerRedis = builder
-    .AddRedis("BestiaryArenaCrackerRedis")
-    .WithRedisInsight();
+    .AddRedis("BestiaryArenaCrackerRedis", 56716)
+    .WithRedisInsight(configureContainer: (options) =>
+    {
+        options.WithHostPort(56717);
+    });
 
 builder
     .AddProject<Projects.BestiaryArenaCracker_MigrationService>("bestiaryarenacracker-migrationservice")

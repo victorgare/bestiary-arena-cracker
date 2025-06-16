@@ -59,11 +59,15 @@ namespace BestiaryArenaCracker.Repository.Repositories
             return dbContext.Compositions
                 .AsNoTracking()
                 .Where(c => c.RoomId == roomId && !excludedIds.Contains(c.Id))
-                .OrderBy(c => c.Id)
-                .FirstOrDefaultAsync(c =>
-                    dbContext.CompositionResults
-                        .AsNoTracking()
-                        .Count(r => r.CompositionId == c.Id) < maxResults);
+                .GroupJoin(
+                    dbContext.CompositionResults.AsNoTracking(),
+                    c => c.Id,
+                    r => r.CompositionId,
+                    (c, results) => new { Composition = c, ResultCount = results.Count() })
+                .Where(x => x.ResultCount < maxResults)
+                .OrderBy(x => x.Composition.Id)
+                .Select(x => x.Composition)
+                .FirstOrDefaultAsync();
         }
 
         public Task<int> GetResultsCountAsync(int compositionId)
