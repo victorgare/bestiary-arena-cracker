@@ -8,6 +8,7 @@ using BestiaryArenaCracker.Domain.Entities;
 using BestiaryArenaCracker.Domain.Extensions;
 using BestiaryArenaCracker.Domain.Room;
 using StackExchange.Redis;
+using System.Collections.Concurrent;
 using System.Security.Cryptography;
 
 namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
@@ -17,12 +18,29 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
         ICompositionRepository compositionRepository,
         IConnectionMultiplexer connectionMultiplexer) : ICompositionService
     {
+        private static readonly TimeSpan ReservationTtl = TimeSpan.FromMinutes(10);
+        private static readonly ConcurrentDictionary<int, DateTime> _inUse = new();
+
         public async Task<IReadOnlyList<CompositionResult>> FindCompositionAsync(int count = 1)
         {
             var allRoomsExceptBoosted = roomConfigProvider.AllRooms.Where(c => !roomConfigProvider.BoostedRoomId.Contains(c.Id));
             var excludedIds = new HashSet<int>();
             var db = connectionMultiplexer.GetDatabase();
             var results = new List<CompositionResult>();
+
+            // clean expired reservations and use them to skip DB lookups
+            var now = DateTime.UtcNow;
+            foreach (var kvp in _inUse.ToArray())
+            {
+                if (kvp.Value <= now)
+                    _inUse.TryRemove(kvp.Key, out _);
+            }
+
+            foreach (var id in _inUse.Keys)
+            {
+                excludedIds.Add(id);
+            }
+
 
             foreach (var room in allRoomsExceptBoosted)
             {
@@ -39,7 +57,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
                     var reserved = await db.StringSetAsync(
                         $"composition:{composition.Id}:reserved",
                         "1",
-                        TimeSpan.FromMinutes(1),
+                        ReservationTtl,
                         When.NotExists);
 
                     if (!reserved)
@@ -51,7 +69,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
                     var monsters = await compositionRepository.GetMonstersByCompositionIdAsync(composition.Id);
                     var resultsCount = await compositionRepository.GetResultsCountAsync(composition.Id);
 
-                    results.Add(new CompositionResult
+                    var result = new CompositionResult
                     {
                         CompositionId = composition.Id,
                         RemainingRuns = ConfigurationConstants.DefaultMinimumCompositionRuns - resultsCount,
@@ -79,7 +97,10 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
                                 }
                             })]
                         }
-                    });
+                    };
+
+                    results.Add(result);
+                    _inUse[composition.Id] = DateTime.UtcNow.Add(ReservationTtl);
                 }
 
                 if (results.Count >= count)
@@ -251,6 +272,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
             await compositionRepository.AddResults(compositionId, compositions);
             var db = connectionMultiplexer.GetDatabase();
             await db.KeyDeleteAsync($"composition:{compositionId}:reserved");
+            _inUse.TryRemove(compositionId, out _);
         }
 
         // Helper: Get all combinations of a list (n choose k)

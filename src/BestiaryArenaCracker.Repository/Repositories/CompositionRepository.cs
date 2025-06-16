@@ -63,9 +63,9 @@ namespace BestiaryArenaCracker.Repository.Repositories
                     dbContext.CompositionResults.AsNoTracking(),
                     c => c.Id,
                     r => r.CompositionId,
-                    (c, results) => new { Composition = c, Count = results.Count() })
+                    (c, results) => new { Composition = c, ResultCount = results.Count() })
+                .Where(x => x.ResultCount < maxResults)
                 .OrderBy(x => x.Composition.Id)
-                .Where(x => x.Count < maxResults)
                 .Select(x => x.Composition)
                 .FirstOrDefaultAsync();
         }
