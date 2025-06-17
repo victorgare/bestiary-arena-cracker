@@ -1,5 +1,4 @@
-﻿using BestiaryArenaCracker.Domain.Composition;
-using BestiaryArenaCracker.Domain.Entities;
+﻿using BestiaryArenaCracker.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

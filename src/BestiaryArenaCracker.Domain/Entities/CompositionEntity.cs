@@ -4,5 +4,6 @@
     {
         public string CompositionHash { get; set; } = null!;
         public string RoomId { get; set; } = null!;
+        public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
     }
 }

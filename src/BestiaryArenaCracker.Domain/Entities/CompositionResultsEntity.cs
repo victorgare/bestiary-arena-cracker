@@ -8,5 +8,6 @@
         public string Grade { get; set; } = null!;
         public bool Victory { get; set; } = false;
         public int Seed { get; set; }
+        public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
     }
 }
