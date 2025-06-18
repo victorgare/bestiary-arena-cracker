@@ -17,7 +17,7 @@ export function TimeRangePicker({
   return (
     <div className="flex items-center gap-2 mb-4">
       <input
-        type="date"
+        type="datetime-local"
         name="start"
         value={value.start}
         onChange={handleChange}
@@ -27,7 +27,7 @@ export function TimeRangePicker({
         to
       </span>
       <input
-        type="date"
+        type="datetime-local"
         name="end"
         value={value.end}
         onChange={handleChange}

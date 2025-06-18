@@ -1,4 +1,5 @@
-﻿using BestiaryArenaCracker.Domain.Dashboards;
+using System;
+using BestiaryArenaCracker.Domain.Dashboards;
 
 namespace BestiaryArenaCracker.ApplicationCore.Interfaces.Repositories
 {
@@ -6,5 +7,6 @@ namespace BestiaryArenaCracker.ApplicationCore.Interfaces.Repositories
     {
         Task<SummaryDashboard[]> GetSummaryAsync();
         Task<RoomDetailsDashboard> GetRoomDetailsAsync(string roomId);
+        Task<TimespanDashboard> GetTimespanAsync(DateTime start, DateTime end);
     }
 }
