@@ -1,4 +1,5 @@
-﻿using BestiaryArenaCracker.ApplicationCore.Interfaces.Providers;
+using System;
+using BestiaryArenaCracker.ApplicationCore.Interfaces.Providers;
 using BestiaryArenaCracker.ApplicationCore.Interfaces.Repositories;
 using BestiaryArenaCracker.ApplicationCore.Interfaces.Services;
 using BestiaryArenaCracker.Domain.Dashboards;
@@ -45,6 +46,11 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Dashboards
             }
 
             return [.. result];
+        }
+
+        public Task<TimespanDashboard> GetTimespanAsync(DateTime start, DateTime end)
+        {
+            return dashboardRepository.GetTimespanAsync(start, end);
         }
     }
 }

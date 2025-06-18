@@ -6,12 +6,16 @@ import { useEffect, useState } from "react";
 type TimespanData = {
   totalCompositions: number;
   totalResults: number;
-  dailyResults: { date: string; count: number }[];
+  points: { date: string; compositions: number; results: number }[];
 };
 
 export default function TimespanPage() {
-  const today = new Date().toISOString().slice(0, 10);
-  const [range, setRange] = useState({ start: today, end: today });
+  const now = new Date();
+  const toIso = (d: Date) => d.toISOString().slice(0, 16);
+  const [range, setRange] = useState({
+    start: toIso(new Date(now.getTime() - 24 * 60 * 60 * 1000)),
+    end: toIso(now),
+  });
   const [data, setData] = useState<TimespanData | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -45,7 +49,7 @@ export default function TimespanPage() {
           <div style={{ color: "var(--color-muted)" }}>
             Compositions: {data.totalCompositions} • Results: {data.totalResults}
           </div>
-          <ThroughputChart data={data.dailyResults} />
+          <ThroughputChart data={data.points} />
         </div>
       )}
     </div>

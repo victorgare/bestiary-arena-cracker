@@ -192,5 +192,56 @@ namespace BestiaryArenaCracker.Repository.Repositories
 
             return query.ToArrayAsync();
         }
+
+        public async Task<TimespanDashboard> GetTimespanAsync(DateTime start, DateTime end)
+        {
+            var comps = await dbContext.Compositions
+                .AsNoTracking()
+                .Where(c => c.CreatedDate >= start && c.CreatedDate <= end)
+                .Select(c => c.CreatedDate)
+                .ToListAsync();
+
+            var results = await dbContext.CompositionResults
+                .AsNoTracking()
+                .Where(r => r.CreatedDate >= start && r.CreatedDate <= end)
+                .Select(r => r.CreatedDate)
+                .ToListAsync();
+
+            Func<DateTime, DateTime> bucket;
+            var diff = end - start;
+            if (diff.TotalHours <= 1)
+            {
+                bucket = d => new DateTime(d.Year, d.Month, d.Day, d.Hour, d.Minute, 0);
+            }
+            else if (diff.TotalDays <= 1)
+            {
+                bucket = d => new DateTime(d.Year, d.Month, d.Day, d.Hour, 0, 0);
+            }
+            else
+            {
+                bucket = d => d.Date;
+            }
+
+            var compGroups = comps.GroupBy(bucket).ToDictionary(g => g.Key, g => g.Count());
+            var resultGroups = results.GroupBy(bucket).ToDictionary(g => g.Key, g => g.Count());
+
+            var allDates = compGroups.Keys.Union(resultGroups.Keys).OrderBy(d => d);
+
+            var points = allDates
+                .Select(d => new TimespanPoint
+                {
+                    Date = d,
+                    Compositions = compGroups.TryGetValue(d, out var cc) ? cc : 0,
+                    Results = resultGroups.TryGetValue(d, out var rc) ? rc : 0
+                })
+                .ToList();
+
+            return new TimespanDashboard
+            {
+                TotalCompositions = comps.Count,
+                TotalResults = results.Count,
+                Points = points
+            };
+        }
     }
 }
