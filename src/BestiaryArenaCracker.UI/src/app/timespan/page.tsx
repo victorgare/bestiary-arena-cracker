@@ -48,7 +48,7 @@ export default function TimespanPage() {
         </div>
       )}
       {data && (
-        <div className="flex flex-col gap-4 mt-4">
+        <div className="flex flex-col gap-4 mt-12">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <StatsCard label="Compositions" value={data.totalCompositions} />
             <StatsCard label="Results" value={data.totalResults} />
