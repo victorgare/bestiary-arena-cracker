@@ -67,6 +67,8 @@ public class DashboardServiceTests
         {
             TotalCompositions = 3,
             TotalResults = 5,
+            AverageCompositionsPerHour = 1.5,
+            AverageResultsPerHour = 2.5,
             Points = [new TimespanPoint { Date = DateTime.UtcNow.Date, Compositions = 1, Results = 2 }]
         };
 
@@ -82,6 +84,8 @@ public class DashboardServiceTests
         {
             Assert.That(result.TotalCompositions, Is.EqualTo(expected.TotalCompositions));
             Assert.That(result.TotalResults, Is.EqualTo(expected.TotalResults));
+            Assert.That(result.AverageCompositionsPerHour, Is.EqualTo(expected.AverageCompositionsPerHour));
+            Assert.That(result.AverageResultsPerHour, Is.EqualTo(expected.AverageResultsPerHour));
             Assert.That(result.Points, Has.Count.EqualTo(1));
             Assert.That(result.Points[0].Compositions, Is.EqualTo(expected.Points[0].Compositions));
             Assert.That(result.Points[0].Results, Is.EqualTo(expected.Points[0].Results));

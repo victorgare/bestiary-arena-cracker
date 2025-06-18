@@ -14,6 +14,8 @@ namespace BestiaryArenaCracker.Domain.Dashboards
     {
         public int TotalCompositions { get; set; }
         public int TotalResults { get; set; }
+        public double AverageCompositionsPerHour { get; set; }
+        public double AverageResultsPerHour { get; set; }
         public List<TimespanPoint> Points { get; set; } = [];
     }
 }

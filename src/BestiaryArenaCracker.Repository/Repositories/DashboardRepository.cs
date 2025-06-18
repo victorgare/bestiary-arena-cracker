@@ -236,10 +236,14 @@ namespace BestiaryArenaCracker.Repository.Repositories
                 })
                 .ToList();
 
+            var totalHours = Math.Max((end - start).TotalHours, 1);
+
             return new TimespanDashboard
             {
                 TotalCompositions = comps.Count,
                 TotalResults = results.Count,
+                AverageCompositionsPerHour = comps.Count / totalHours,
+                AverageResultsPerHour = results.Count / totalHours,
                 Points = points
             };
         }

@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 type TimespanData = {
   totalCompositions: number;
   totalResults: number;
+  averageCompositionsPerHour: number;
+  averageResultsPerHour: number;
   points: { date: string; compositions: number; results: number }[];
 };
 
@@ -48,6 +50,8 @@ export default function TimespanPage() {
         <div className="flex flex-col gap-4 mt-4">
           <div style={{ color: "var(--color-muted)" }}>
             Compositions: {data.totalCompositions} • Results: {data.totalResults}
+            <br />Avg Comp/h: {data.averageCompositionsPerHour.toFixed(2)} • Avg
+            Res/h: {data.averageResultsPerHour.toFixed(2)}
           </div>
           <ThroughputChart data={data.points} />
         </div>
