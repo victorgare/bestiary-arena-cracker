@@ -2,7 +2,7 @@
 import { TimeRangePicker } from "@/components/atom/TimeRangePicker.tsx";
 import { ThroughputChart } from "@/components/Timespan/ThroughputChart";
 import { StatsCard } from "@/components/Timespan/StatsCard";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type TimespanData = {
   totalCompositions: number;
@@ -24,7 +24,7 @@ export default function TimespanPage() {
 
   const baseUrl = process.env.NEXT_PUBLIC_API_BASEURL;
 
-  useEffect(() => {
+  const refreshData = useCallback(() => {
     if (!range.start || !range.end) return;
     setLoading(true);
     fetch(
@@ -36,12 +36,25 @@ export default function TimespanPage() {
       .finally(() => setLoading(false));
   }, [range, baseUrl]);
 
+  useEffect(() => {
+    refreshData();
+  }, [range, baseUrl, refreshData]);
+
   return (
     <div className="p-8">
-      <h1 className="text-3xl font-bold mb-4" style={{ color: "var(--color-gold)" }}>
+      <h1
+        className="text-3xl font-bold mb-4"
+        style={{ color: "var(--color-gold)" }}
+      >
         Timespan Dashboard
       </h1>
       <TimeRangePicker value={range} onChange={setRange} />
+      <button
+        onClick={() => refreshData()}
+        className="mb-6 px-4 py-2 rounded bg-[var(--color-gold)] text-[var(--color-card)] font-bold hover:bg-yellow-300 transition"
+      >
+        Refresh
+      </button>
       {loading && (
         <div className="text-center" style={{ color: "var(--color-muted)" }}>
           Loading...
