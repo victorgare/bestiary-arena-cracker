@@ -1,7 +1,18 @@
 "use client";
 import React from "react";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Tooltip,
+  Legend,
+} from "chart.js";
+import { Bar } from "react-chartjs-2";
 
 type Point = { date: string; compositions: number; results: number };
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
 export function ThroughputChart({ data }: { data: Point[] }) {
   if (!data.length) {
@@ -12,33 +23,49 @@ export function ThroughputChart({ data }: { data: Point[] }) {
     );
   }
 
-  const max = Math.max(...data.map((d) => Math.max(d.compositions, d.results)));
+  const style = getComputedStyle(document.documentElement);
+  const colorGold = style.getPropertyValue("--color-gold").trim();
+  const colorGoldDark = style.getPropertyValue("--color-gold-dark").trim();
+  const colorText = style.getPropertyValue("--color-text").trim();
+
+  const chartData = {
+    labels: data.map((d) => d.date.slice(5)),
+    datasets: [
+      {
+        label: "Compositions",
+        data: data.map((d) => d.compositions),
+        backgroundColor: colorGold,
+      },
+      {
+        label: "Results",
+        data: data.map((d) => d.results),
+        backgroundColor: colorGoldDark,
+      },
+    ],
+  };
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      x: {
+        ticks: { color: colorText },
+      },
+      y: {
+        beginAtZero: true,
+        ticks: { color: colorText },
+      },
+    },
+    plugins: {
+      legend: {
+        labels: { color: colorText },
+      },
+    },
+  } as const;
 
   return (
-    <div className="flex items-end gap-2 h-40 w-full">
-      {data.map((p) => (
-        <div key={p.date} className="flex flex-col items-center flex-1">
-          <div className="flex w-full items-end gap-1">
-            <div
-              className="flex-1"
-              style={{
-                height: `${(p.compositions / max) * 100}%`,
-                background: "var(--color-gold)",
-              }}
-            />
-            <div
-              className="flex-1"
-              style={{
-                height: `${(p.results / max) * 100}%`,
-                background: "var(--color-gold-dark)",
-              }}
-            />
-          </div>
-          <span className="text-xs mt-1" style={{ color: "var(--color-muted)" }}>
-            {p.date.slice(5)}
-          </span>
-        </div>
-      ))}
+    <div style={{ height: "25rem" }}>
+      <Bar data={chartData} options={options} />
     </div>
   );
 }
