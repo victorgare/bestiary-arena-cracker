@@ -1,11 +1,14 @@
 "use client";
 import { TimeRangePicker } from "@/components/atom/TimeRangePicker.tsx";
 import { ThroughputChart } from "@/components/Timespan/ThroughputChart";
+import { StatsCard } from "@/components/Timespan/StatsCard";
 import { useEffect, useState } from "react";
 
 type TimespanData = {
   totalCompositions: number;
   totalResults: number;
+  averageCompositionsPerHour: number;
+  averageResultsPerHour: number;
   points: { date: string; compositions: number; results: number }[];
 };
 
@@ -45,9 +48,18 @@ export default function TimespanPage() {
         </div>
       )}
       {data && (
-        <div className="flex flex-col gap-4 mt-4">
-          <div style={{ color: "var(--color-muted)" }}>
-            Compositions: {data.totalCompositions} • Results: {data.totalResults}
+        <div className="flex flex-col gap-4 mt-12">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <StatsCard label="Compositions" value={data.totalCompositions} />
+            <StatsCard label="Results" value={data.totalResults} />
+            <StatsCard
+              label="Avg Comp/h"
+              value={data.averageCompositionsPerHour.toFixed(2)}
+            />
+            <StatsCard
+              label="Avg Res/h"
+              value={data.averageResultsPerHour.toFixed(2)}
+            />
           </div>
           <ThroughputChart data={data.points} />
         </div>
