@@ -1,6 +1,7 @@
 
 using BestiaryArenaCracker.Api.Infrastructure.DependencyInjection;
 using BestiaryArenaCracker.Repository.Context;
+using System.Text.Json;
 
 namespace BestiaryArenaCracker.Api;
 
