@@ -23,18 +23,23 @@ export function ThroughputChart({ data }: { data: Point[] }) {
     );
   }
 
+  const style = getComputedStyle(document.documentElement);
+  const colorGold = style.getPropertyValue("--color-gold").trim();
+  const colorGoldDark = style.getPropertyValue("--color-gold-dark").trim();
+  const colorText = style.getPropertyValue("--color-text").trim();
+
   const chartData = {
     labels: data.map((d) => d.date.slice(5)),
     datasets: [
       {
         label: "Compositions",
         data: data.map((d) => d.compositions),
-        backgroundColor: "var(--color-gold)",
+        backgroundColor: colorGold,
       },
       {
         label: "Results",
         data: data.map((d) => d.results),
-        backgroundColor: "var(--color-gold-dark)",
+        backgroundColor: colorGoldDark,
       },
     ],
   };
@@ -44,16 +49,16 @@ export function ThroughputChart({ data }: { data: Point[] }) {
     maintainAspectRatio: false,
     scales: {
       x: {
-        ticks: { color: "var(--color-text)" },
+        ticks: { color: colorText },
       },
       y: {
         beginAtZero: true,
-        ticks: { color: "var(--color-text)" },
+        ticks: { color: colorText },
       },
     },
     plugins: {
       legend: {
-        labels: { color: "var(--color-text)" },
+        labels: { color: colorText },
       },
     },
   } as const;
