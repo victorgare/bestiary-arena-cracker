@@ -64,7 +64,7 @@ export function ThroughputChart({ data }: { data: Point[] }) {
   } as const;
 
   return (
-    <div style={{ height: "10rem" }}>
+    <div style={{ height: "25rem" }}>
       <Bar data={chartData} options={options} />
     </div>
   );
