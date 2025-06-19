@@ -16,7 +16,7 @@ export default function TimespanPage() {
   const now = new Date();
   const toIso = (d: Date) => d.toISOString().slice(0, 16);
   const [range, setRange] = useState({
-    start: toIso(new Date(now.getTime() - 24 * 60 * 60 * 1000)),
+    start: toIso(new Date(now.getTime() - 12 * 60 * 60 * 1000)),
     end: toIso(now),
   });
   const [data, setData] = useState<TimespanData | null>(null);
