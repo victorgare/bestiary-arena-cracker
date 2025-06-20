@@ -65,18 +65,30 @@ public class CompositionModelTrainer(ApplicationDbContext dbContext)
 
     private List<ScoreModelInput> LoadScoreData()
     {
-        var victories = _dbContext.CompositionResults.AsNoTracking()
+        var bestResults = _dbContext.CompositionResults.AsNoTracking()
             .Where(r => r.Victory)
             .GroupBy(r => r.CompositionId)
-            .Select(g => g.OrderByDescending(r => r.Points).ThenBy(r => r.Ticks).First())
+            .Select(g => g.OrderByDescending(r => r.Points).ThenBy(r => r.Ticks)
+                .Select(r => new { r.CompositionId, r.Points })
+                .First())
             .ToList();
 
-        var monsters = _dbContext.CompositionMonsters.AsNoTracking().ToList();
-        var groups = monsters.GroupBy(m => m.CompositionId).ToDictionary(g => g.Key, g => g.ToList());
-        _maxTeamSize = groups.Values.Any() ? groups.Values.Max(g => g.Count) : 1;
+        var compositionIds = bestResults.Select(r => r.CompositionId).ToList();
 
-        var list = new List<ScoreModelInput>();
-        foreach (var result in victories)
+        var monsters = _dbContext.CompositionMonsters.AsNoTracking()
+            .Where(m => compositionIds.Contains(m.CompositionId))
+            .ToList();
+
+        _maxTeamSize = _dbContext.CompositionMonsters.AsNoTracking()
+            .GroupBy(m => m.CompositionId)
+            .Select(g => g.Count())
+            .Max();
+
+        var groups = monsters.GroupBy(m => m.CompositionId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        var list = new List<ScoreModelInput>(bestResults.Count);
+        foreach (var result in bestResults)
         {
             if (groups.TryGetValue(result.CompositionId, out var team))
             {
@@ -84,23 +96,36 @@ public class CompositionModelTrainer(ApplicationDbContext dbContext)
                 list.Add(new ScoreModelInput { Features = features, Points = result.Points });
             }
         }
+
         return list;
     }
 
     private List<SpeedModelInput> LoadSpeedData()
     {
-        var victories = _dbContext.CompositionResults.AsNoTracking()
+        var bestResults = _dbContext.CompositionResults.AsNoTracking()
             .Where(r => r.Victory)
             .GroupBy(r => r.CompositionId)
-            .Select(g => g.OrderBy(r => r.Ticks).First())
+            .Select(g => g.OrderBy(r => r.Ticks)
+                .Select(r => new { r.CompositionId, r.Ticks })
+                .First())
             .ToList();
 
-        var monsters = _dbContext.CompositionMonsters.AsNoTracking().ToList();
-        var groups = monsters.GroupBy(m => m.CompositionId).ToDictionary(g => g.Key, g => g.ToList());
-        _maxTeamSize = groups.Values.Any() ? groups.Values.Max(g => g.Count) : 1;
+        var compositionIds = bestResults.Select(r => r.CompositionId).ToList();
 
-        var list = new List<SpeedModelInput>();
-        foreach (var result in victories)
+        var monsters = _dbContext.CompositionMonsters.AsNoTracking()
+            .Where(m => compositionIds.Contains(m.CompositionId))
+            .ToList();
+
+        _maxTeamSize = _dbContext.CompositionMonsters.AsNoTracking()
+            .GroupBy(m => m.CompositionId)
+            .Select(g => g.Count())
+            .Max();
+
+        var groups = monsters.GroupBy(m => m.CompositionId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        var list = new List<SpeedModelInput>(bestResults.Count);
+        foreach (var result in bestResults)
         {
             if (groups.TryGetValue(result.CompositionId, out var team))
             {
@@ -108,6 +133,7 @@ public class CompositionModelTrainer(ApplicationDbContext dbContext)
                 list.Add(new SpeedModelInput { Features = features, Ticks = result.Ticks });
             }
         }
+
         return list;
     }
 
