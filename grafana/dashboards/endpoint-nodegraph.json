@@ -46,12 +46,16 @@
       "type": "nodeGraph",
       "targets": [
         {
-          "expr": "sum(rate(http_server_request_duration_seconds_count{job=\"aspire-monitoring\"}[1m])) by (http_route)",
-          "refId": "A"
+          "expr": "sum(increase(http_server_request_duration_seconds_count{job=\"aspire-monitoring\"}[5m])) by (http_route)",
+          "refId": "A",
+          "format": "table",
+          "instant": true
         },
         {
-          "expr": "sum(rate(http_server_request_duration_seconds_sum{job=\"aspire-monitoring\"}[1m])) by (http_route) / sum(rate(http_server_request_duration_seconds_count{job=\"aspire-monitoring\"}[1m])) by (http_route)",
-          "refId": "B"
+          "expr": "sum(increase(http_server_request_duration_seconds_sum{job=\"aspire-monitoring\"}[5m])) by (http_route) / sum(increase(http_server_request_duration_seconds_count{job=\"aspire-monitoring\"}[5m])) by (http_route)",
+          "refId": "B",
+          "format": "table",
+          "instant": true
         }
       ],
       "options": {
