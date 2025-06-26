@@ -63,7 +63,8 @@
             ["kking"] = "Emperor Kruzak's Treasure Room",
             ["klab"] = "Mad Technomancer's Lab",
             ["roboat"] = "Awash Steamship",
-            ["robwal"] = "Robson's Isle Ruins"
+            ["robwal"] = "Robson's Isle Ruins",
+            ["vbridge"] = "Dwarven Bridge"
         };
     }
 }
