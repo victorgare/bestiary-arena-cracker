@@ -43,6 +43,13 @@ You can also run the API or UI individually.
 
 The UI will be available by default at `http://localhost:3000`.
 
+## Grafana dashboards
+
+Grafana starts automatically when running the distributed host. You can access
+it at `http://localhost:3000`. A new dashboard named **Endpoint Node Graph**
+visualizes each API route as a node with the request rate and average response
+time. It is provisioned from `grafana/dashboards/endpoint-nodegraph.json`.
+
 ## Running tests
 
 Execute the unit tests for the solution with:
