@@ -7,6 +7,7 @@ using BestiaryArenaCracker.Domain.Constants;
 using BestiaryArenaCracker.Domain.Entities;
 using BestiaryArenaCracker.Domain.Extensions;
 using BestiaryArenaCracker.Domain.Room;
+using RedLockNet;
 using StackExchange.Redis;
 using System.Collections.Concurrent;
 using System.Security.Cryptography;
@@ -16,7 +17,8 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
     public class CompositionService(
         IRoomConfigProvider roomConfigProvider,
         ICompositionRepository compositionRepository,
-        IConnectionMultiplexer connectionMultiplexer) : ICompositionService
+        IConnectionMultiplexer connectionMultiplexer,
+        IDistributedLockFactory distributedLockFactory) : ICompositionService
     {
         private static readonly TimeSpan ReservationTtl = TimeSpan.FromMinutes(10);
         private static readonly ConcurrentDictionary<int, DateTime> _inUse = new();
@@ -25,7 +27,6 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
         {
             var allRoomsExceptBoosted = roomConfigProvider.AllRooms.Where(c => !roomConfigProvider.BoostedRoomId.Contains(c.Id));
             var excludedIds = new HashSet<int>();
-            var db = connectionMultiplexer.GetDatabase();
             var results = new List<CompositionResult>();
 
             // clean expired reservations and use them to skip DB lookups
@@ -54,17 +55,11 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
 
                     if (compositions.Length == 0)
                         break;
+
                     foreach (var composition in compositions)
                     {
-
-
-                        var reserved = await db.StringSetAsync(
-                            $"composition:{composition.Id}:reserved",
-                            "1",
-                            ReservationTtl,
-                            When.NotExists);
-
-                        if (!reserved)
+                        var reserved = await distributedLockFactory.CreateLockAsync($"composition:{composition.Id}:reserved", ReservationTtl);
+                        if (!reserved.IsAcquired)
                         {
                             excludedIds.Add(composition.Id);
                             continue;
