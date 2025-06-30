@@ -11,11 +11,15 @@ namespace BestiaryArenaCracker.Repository.EntityConfiguration
             builder.ToTable("CompositionResults");
             builder.HasKey(c => c.Id);
 
+            builder.HasIndex(c => c.CompositionId);
+
             builder
                 .HasOne<CompositionEntity>()
                 .WithMany()
                 .HasForeignKey(x => x.CompositionId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            
         }
     }
 }

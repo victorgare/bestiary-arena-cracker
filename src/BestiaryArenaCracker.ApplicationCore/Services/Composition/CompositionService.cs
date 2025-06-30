@@ -46,37 +46,41 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
             {
                 while (results.Count < count)
                 {
-                    var composition = await compositionRepository.GetNextAvailableCompositionAsync(
+                    var compositions = await compositionRepository.GetNextAvailableCompositionsAsync(
                         room.Id,
                         ConfigurationConstants.DefaultMinimumCompositionRuns,
-                        excludedIds);
+                        excludedIds,
+                        count);
 
-                    if (composition == null)
+                    if (compositions.Length == 0)
                         break;
-
-                    var reserved = await db.StringSetAsync(
-                        $"composition:{composition.Id}:reserved",
-                        "1",
-                        ReservationTtl,
-                        When.NotExists);
-
-                    if (!reserved)
+                    foreach (var composition in compositions)
                     {
-                        excludedIds.Add(composition.Id);
-                        continue;
-                    }
 
-                    var monsters = await compositionRepository.GetMonstersByCompositionIdAsync(composition.Id);
-                    var resultsCount = await compositionRepository.GetResultsCountAsync(composition.Id);
 
-                    var result = new CompositionResult
-                    {
-                        CompositionId = composition.Id,
-                        RemainingRuns = ConfigurationConstants.DefaultMinimumCompositionRuns - resultsCount,
-                        Composition = new Domain.Composition.Composition
+                        var reserved = await db.StringSetAsync(
+                            $"composition:{composition.Id}:reserved",
+                            "1",
+                            ReservationTtl,
+                            When.NotExists);
+
+                        if (!reserved)
                         {
-                            Map = room.Name,
-                            Board = [.. monsters.Select(m => new Board
+                            excludedIds.Add(composition.Id);
+                            continue;
+                        }
+
+                        var monsters = await compositionRepository.GetMonstersByCompositionIdAsync(composition.Id);
+                        var resultsCount = await compositionRepository.GetResultsCountAsync(composition.Id);
+
+                        var result = new CompositionResult
+                        {
+                            CompositionId = composition.Id,
+                            RemainingRuns = ConfigurationConstants.DefaultMinimumCompositionRuns - resultsCount,
+                            Composition = new Domain.Composition.Composition
+                            {
+                                Map = room.Name,
+                                Board = [.. monsters.Select(m => new Board
                             {
                                 Tile = m.TileLocation,
                                 Monster = new Monster
@@ -96,11 +100,14 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
                                     Tier = m.EquipmentTier
                                 }
                             })]
-                        }
-                    };
+                            }
+                        };
 
-                    results.Add(result);
-                    _inUse[composition.Id] = DateTime.UtcNow.Add(ReservationTtl);
+                        results.Add(result);
+                        _inUse[composition.Id] = DateTime.UtcNow.Add(ReservationTtl);
+                    }
+
+                    count -= results.Count;
                 }
 
                 if (results.Count >= count)
