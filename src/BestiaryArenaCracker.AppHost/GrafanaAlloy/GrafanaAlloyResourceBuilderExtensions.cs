@@ -27,8 +27,8 @@ namespace BestiaryArenaCracker.AppHost.GrafanaAlloy
                 .WithEndpoint(targetPort: 4317, name: GrafanaAlloyResource.OtlpGrpcEndpointName, scheme: isHttpsEnabled ? "https" : "http")
                 .WithEndpoint(targetPort: 4318, name: GrafanaAlloyResource.OtlpHttpEndpointName, scheme: isHttpsEnabled ? "https" : "http")
                 .WithEndpoint(targetPort: PrometheusPort, name: GrafanaAlloyResource.PrometheusEndpointName)
-                .WithBindMount(configFileLocation, "/etc/alloy/config.yaml")
-                .WithArgs("run", "--config.file=/etc/alloy/config.yaml")
+                .WithBindMount(configFileLocation, "/etc/alloy/config.alloy")
+                .WithArgs("run", "--config.file=/etc/alloy/config.alloy")
                 .WithEnvironment("ASPIRE_ENDPOINT", $"{dashboardOtlpEndpoint}")
                 .WithEnvironment("ASPIRE_API_KEY", builder.Configuration[DashboardOtlpApiKeyVariableName])
                 .WithEnvironment("ASPIRE_INSECURE", isHttpsEnabled ? "false" : "true");

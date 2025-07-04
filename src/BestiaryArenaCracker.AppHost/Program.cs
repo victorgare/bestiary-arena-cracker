@@ -9,7 +9,7 @@ var loki = builder.AddContainer("loki", "grafana/loki:latest")
     .WithHttpEndpoint(port: 5400, targetPort: 3100, name: "http");
 
 var alloy = builder
-    .AddGrafanaAlloy("alloy", "../../infra/alloy/config.yaml")
+    .AddGrafanaAlloy("alloy", "../../infra/alloy/config.alloy")
     .WithEnvironment("LOKI_ENDPOINT", $"{loki.GetEndpoint("http")}/loki/api/v1/push");
 
 var granafa = builder.AddContainer("grafana", "grafana/grafana")

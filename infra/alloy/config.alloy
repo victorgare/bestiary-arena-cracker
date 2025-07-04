@@ -1,0 +1,78 @@
+logging {
+  level = "debug"
+}
+
+otelcol.receiver.otlp "default" {
+  grpc {
+    endpoint = "0.0.0.0:4317"
+  }
+  http {
+    endpoint = "0.0.0.0:4318"
+  }
+  output {
+    traces  = [otelcol.processor.batch.default.input]
+    logs    = [otelcol.processor.attributes.add_service_label.input]
+    metrics = [otelcol.processor.batch.default.input]
+  }
+}
+
+otelcol.processor.attributes "add_service_label" {
+  actions = [
+    {
+      key = "service"
+      value = "aspire-app"
+      action = "insert"
+    }
+  ]
+  output {
+    logs = [otelcol.processor.resource.add_labels.input]
+  }
+}
+
+otelcol.processor.resource "add_labels" {
+  attributes = [
+    {
+      key           = "service.name"
+      from_attribute = "service"
+      action        = "insert"
+    }
+  ]
+  output {
+    logs = [otelcol.processor.batch.default.input]
+  }
+}
+
+otelcol.processor.batch "default" {
+  output {
+    traces  = [otelcol.exporter.otlp.aspire.input]
+    logs    = [otelcol.exporter.otlp.aspire.input, otelcol.exporter.loki.default.input]
+    metrics = [otelcol.exporter.otlp.aspire.input]
+  }
+}
+
+otelcol.exporter.otlp "aspire" {
+  client {
+    endpoint = env("ASPIRE_ENDPOINT")
+    headers = {
+      "x-otlp-api-key" = env("ASPIRE_API_KEY")
+    }
+    tls {
+      insecure = env("ASPIRE_INSECURE")
+      insecure_skip_verify = true
+    }
+  }
+}
+
+otelcol.exporter.loki "default" {
+  forward_to = [loki.write.default.receiver]
+}
+
+loki.write "default" {
+  endpoint {
+    url = env("LOKI_ENDPOINT")
+    tls_config {
+      insecure = env("ASPIRE_INSECURE")
+      insecure_skip_verify = true
+    }
+  }
+}
