@@ -1,22 +1,32 @@
-using BestiaryArenaCracker.AppHost.OpenTelemetryCollector;
+﻿using BestiaryArenaCracker.AppHost.OpenTelemetryCollector;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
 var prometheus = builder
     .AddContainer("prometheus", "prom/prometheus", "v3.2.1")
-    .WithBindMount("../../prometheus", "/etc/prometheus", isReadOnly: true)
+    .WithBindMount("../../infra/prometheus", "/etc/prometheus", isReadOnly: true)
     .WithArgs("--web.enable-otlp-receiver", "--config.file=/etc/prometheus/prometheus.yml")
     .WithHttpEndpoint(targetPort: 9090, name: "http");
 
-var grafana = builder
-    .AddContainer("grafana", "grafana/grafana")
-    .WithBindMount("../../grafana/config", "/etc/grafana", isReadOnly: true)
-    .WithBindMount("../../grafana/dashboards", "/var/lib/grafana/dashboards", isReadOnly: true)
-    .WithEnvironment("PROMETHEUS_ENDPOINT", prometheus.GetEndpoint("http"))
-    .WithHttpEndpoint(targetPort: 3000, name: "http");
+var loki = builder.AddContainer("loki", "grafana/loki:latest")
+    .WithBindMount("../../infra/loki", "/etc/loki")
+    .WithArgs("-config.file=/etc/loki/loki-config.yml")
+    .WithArgs("-config.expand-env=true")
+    .WithHttpEndpoint(port: 5400, targetPort: 3100, name: "http");
 
-builder.AddOpenTelemetryCollector("otelcollector", "../../otelcollector/config.yaml")
-       .WithEnvironment("PROMETHEUS_ENDPOINT", $"{prometheus.GetEndpoint("http")}/api/v1/otlp");
+var granafa = builder.AddContainer("grafana", "grafana/grafana")
+                    .WithHttpEndpoint(port: 5300, targetPort: 3000, name: "http")
+                    .WithBindMount("../../infra/grafana/config", "/etc/grafana")
+                    .WithBindMount("../../infra/grafana/dashboards", "/var/lib/grafana/dashboards", isReadOnly: true)
+                    .WithEnvironment("GF_PATHS_CONFIG", "/etc/grafana/grafana.ini")
+                    .WithEnvironment("GF_INSTALL_PLUGINS", "grafana-clock-panel,grafana-piechart-panel")
+                    .WithEnvironment("GF_INSTALL_PLUGINS", "https://storage.googleapis.com/integration-artifacts/grafana-lokiexplore-app/grafana-lokiexplore-app-latest.zip;grafana-lokiexplore-app")
+                    .WithEnvironment("PROMETHEUS_ENDPOINT", prometheus.GetEndpoint("http"))
+                    .WithEnvironment("GF_PATHS_PROVISIONING", "/etc/grafana/provisioning");
+
+builder.AddOpenTelemetryCollector("otelcollector", "../../infra/otelcollector/config.yaml")
+       .WithEnvironment("PROMETHEUS_ENDPOINT", $"{prometheus.GetEndpoint("http")}/api/v1/otlp")
+       .WithEnvironment("LOKI_ENDPOINT", $"{loki.GetEndpoint("http")}/loki/api/v1/push");
 
 
 
@@ -44,7 +54,8 @@ var bestiaryArenaCrackerApi = builder
     .WithReference(bestiaryArenaCrackerSql)
     .WithReference(BestiaryArenaCrackerRedis)
     .WaitFor(bestiaryArenaCrackerSql)
-    .WaitFor(BestiaryArenaCrackerRedis);
+    .WaitFor(BestiaryArenaCrackerRedis)
+    .WithHttpHealthCheck("/health");
 
 
 builder.
