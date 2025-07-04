@@ -37,8 +37,8 @@ namespace BestiaryArenaCracker.AppHost.GrafanaAlloy
                 DevCertHostingExtensions.RunWithHttpsDevCertificate(resourceBuilder, "HTTPS_CERT_FILE", "HTTPS_CERT_KEY_FILE", (_, __) =>
                 {
                     resourceBuilder.WithArgs(
-                        @"--config=yaml:receivers::otlp::protocols::grpc::tls::cert_file: \"dev-certs/dev-cert.pem\"",
-                        @"--config=yaml:receivers::otlp::protocols::grpc::tls::key_file: \"dev-certs/dev-cert.key\"",
+                        @"--config=yaml:receivers::otlp::protocols::grpc::tls::cert_file: ""dev-certs/dev-cert.pem""",
+                        @"--config=yaml:receivers::otlp::protocols::grpc::tls::key_file: ""dev-certs/dev-cert.key""",
                         @"--config=/etc/alloy/config.yaml");
                 });
             }

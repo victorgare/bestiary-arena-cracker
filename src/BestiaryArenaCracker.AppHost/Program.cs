@@ -2,17 +2,15 @@
 
 var builder = DistributedApplication.CreateBuilder(args);
 
-var alloy = builder.AddContainer("alloy", "grafana/alloy:latest")
-    .WithBindMount("../../infra/alloy", "/etc/alloy")
-    .WithHttpEndpoint(targetPort: 4317, name: "grpc")
-    .WithHttpEndpoint(targetPort: 4318, name: "http")
-    .WithHttpEndpoint(port: 5500, targetPort: 8889, name: "prometheus");
-
 var loki = builder.AddContainer("loki", "grafana/loki:latest")
     .WithBindMount("../../infra/loki", "/etc/loki")
     .WithArgs("-config.file=/etc/loki/loki-config.yml")
     .WithArgs("-config.expand-env=true")
     .WithHttpEndpoint(port: 5400, targetPort: 3100, name: "http");
+
+var alloy = builder
+    .AddGrafanaAlloy("alloy", "../../infra/alloy/config.yaml")
+    .WithEnvironment("LOKI_ENDPOINT", $"{loki.GetEndpoint("http")}/loki/api/v1/push");
 
 var granafa = builder.AddContainer("grafana", "grafana/grafana")
                     .WithHttpEndpoint(port: 5300, targetPort: 3000, name: "http")
@@ -23,9 +21,6 @@ var granafa = builder.AddContainer("grafana", "grafana/grafana")
                     .WithEnvironment("GF_INSTALL_PLUGINS", "https://storage.googleapis.com/integration-artifacts/grafana-lokiexplore-app/grafana-lokiexplore-app-latest.zip;grafana-lokiexplore-app")
                     .WithEnvironment("PROMETHEUS_ENDPOINT", alloy.GetEndpoint("prometheus"))
                     .WithEnvironment("GF_PATHS_PROVISIONING", "/etc/grafana/provisioning");
-
-builder.AddGrafanaAlloy("alloy", "../../infra/alloy/config.yaml")
-       .WithEnvironment("LOKI_ENDPOINT", $"{loki.GetEndpoint("http")}/loki/api/v1/push");
 
 
 
