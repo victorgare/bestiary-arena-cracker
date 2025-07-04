@@ -9,11 +9,10 @@
 - Start the infrastructure using
   `dotnet run --project src/BestiaryArenaCracker.AppHost`.
   This launches the API, SQL Server, Redis and the monitoring stack
-  (Prometheus, Grafana and the OpenTelemetry Collector). When the
+  (Grafana Alloy, Grafana and Loki). When the
   application starts, the console output lists the URLs for each
   component.
-  The monitoring configuration files live under `prometheus/`,
-  `grafana/` and `otelcollector/`.
+  The monitoring configuration files live under `alloy/`, `grafana/` and `loki/`.
 
 ## Pull request guidelines
 - Summarize your changes and reference files in the PR description.

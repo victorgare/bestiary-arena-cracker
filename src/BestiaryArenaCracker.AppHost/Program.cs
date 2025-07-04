@@ -1,12 +1,12 @@
-﻿using BestiaryArenaCracker.AppHost.OpenTelemetryCollector;
+﻿using BestiaryArenaCracker.AppHost.GrafanaAlloy;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
-var prometheus = builder
-    .AddContainer("prometheus", "prom/prometheus", "v3.2.1")
-    .WithBindMount("../../infra/prometheus", "/etc/prometheus", isReadOnly: true)
-    .WithArgs("--web.enable-otlp-receiver", "--config.file=/etc/prometheus/prometheus.yml")
-    .WithHttpEndpoint(targetPort: 9090, name: "http");
+var alloy = builder.AddContainer("alloy", "grafana/alloy:latest")
+    .WithBindMount("../../infra/alloy", "/etc/alloy")
+    .WithHttpEndpoint(targetPort: 4317, name: "grpc")
+    .WithHttpEndpoint(targetPort: 4318, name: "http")
+    .WithHttpEndpoint(port: 5500, targetPort: 8889, name: "prometheus");
 
 var loki = builder.AddContainer("loki", "grafana/loki:latest")
     .WithBindMount("../../infra/loki", "/etc/loki")
@@ -21,11 +21,10 @@ var granafa = builder.AddContainer("grafana", "grafana/grafana")
                     .WithEnvironment("GF_PATHS_CONFIG", "/etc/grafana/grafana.ini")
                     .WithEnvironment("GF_INSTALL_PLUGINS", "grafana-clock-panel,grafana-piechart-panel")
                     .WithEnvironment("GF_INSTALL_PLUGINS", "https://storage.googleapis.com/integration-artifacts/grafana-lokiexplore-app/grafana-lokiexplore-app-latest.zip;grafana-lokiexplore-app")
-                    .WithEnvironment("PROMETHEUS_ENDPOINT", prometheus.GetEndpoint("http"))
+                    .WithEnvironment("PROMETHEUS_ENDPOINT", alloy.GetEndpoint("prometheus"))
                     .WithEnvironment("GF_PATHS_PROVISIONING", "/etc/grafana/provisioning");
 
-builder.AddOpenTelemetryCollector("otelcollector", "../../infra/otelcollector/config.yaml")
-       .WithEnvironment("PROMETHEUS_ENDPOINT", $"{prometheus.GetEndpoint("http")}/api/v1/otlp")
+builder.AddGrafanaAlloy("alloy", "../../infra/alloy/config.yaml")
        .WithEnvironment("LOKI_ENDPOINT", $"{loki.GetEndpoint("http")}/loki/api/v1/push");
 
 
