@@ -28,19 +28,14 @@ namespace BestiaryArenaCracker.AppHost.GrafanaAlloy
                 .WithEndpoint(targetPort: 4318, name: GrafanaAlloyResource.OtlpHttpEndpointName, scheme: isHttpsEnabled ? "https" : "http")
                 .WithEndpoint(targetPort: PrometheusPort, name: GrafanaAlloyResource.PrometheusEndpointName)
                 .WithBindMount(configFileLocation, "/etc/alloy/config.yaml")
+                .WithArgs("run", "--config.file=/etc/alloy/config.yaml")
                 .WithEnvironment("ASPIRE_ENDPOINT", $"{dashboardOtlpEndpoint}")
                 .WithEnvironment("ASPIRE_API_KEY", builder.Configuration[DashboardOtlpApiKeyVariableName])
                 .WithEnvironment("ASPIRE_INSECURE", isHttpsEnabled ? "false" : "true");
 
             if (isHttpsEnabled && builder.ExecutionContext.IsRunMode && builder.Environment.IsDevelopment())
             {
-                DevCertHostingExtensions.RunWithHttpsDevCertificate(resourceBuilder, "HTTPS_CERT_FILE", "HTTPS_CERT_KEY_FILE", (_, __) =>
-                {
-                    resourceBuilder.WithArgs(
-                        @"--config=yaml:receivers::otlp::protocols::grpc::tls::cert_file: ""dev-certs/dev-cert.pem""",
-                        @"--config=yaml:receivers::otlp::protocols::grpc::tls::key_file: ""dev-certs/dev-cert.key""",
-                        @"--config=/etc/alloy/config.yaml");
-                });
+                DevCertHostingExtensions.RunWithHttpsDevCertificate(resourceBuilder, "HTTPS_CERT_FILE", "HTTPS_CERT_KEY_FILE");
             }
 
             return resourceBuilder;
