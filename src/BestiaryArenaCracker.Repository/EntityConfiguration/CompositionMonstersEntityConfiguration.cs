@@ -24,9 +24,9 @@ namespace BestiaryArenaCracker.Repository.EntityConfiguration
                 );
 
             builder
-                .HasOne<CompositionEntity>()
+                .HasOne(cm => cm.Composition)
                 .WithMany()
-                .HasForeignKey(x => x.CompositionId)
+                .HasForeignKey(cm => cm.CompositionId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }

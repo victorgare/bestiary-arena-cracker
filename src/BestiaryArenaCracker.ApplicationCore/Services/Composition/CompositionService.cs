@@ -7,6 +7,7 @@ using BestiaryArenaCracker.Domain.Constants;
 using BestiaryArenaCracker.Domain.Entities;
 using BestiaryArenaCracker.Domain.Extensions;
 using BestiaryArenaCracker.Domain.Room;
+using System;
 using RedLockNet;
 using StackExchange.Redis;
 using System.Collections.Concurrent;
@@ -132,18 +133,13 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
                             RoomId = room.Id
                         };
 
-                        await compositionRepository.AddCompositionAsync(newComposition);
-
-                        if (cancellationToken.IsCancellationRequested)
-                            return;
-
                         var compositionMonsters = new List<CompositionMonstersEntity>();
                         for (int i = 0; i < equippedTeam.Count; i++)
                         {
                             var member = equippedTeam[i];
                             var monster = new CompositionMonstersEntity
                             {
-                                CompositionId = newComposition.Id,
+                                Composition = newComposition,
                                 Name = member.Name,
                                 Hitpoints = member.Hitpoints,
                                 Attack = member.Attack,
@@ -160,7 +156,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
                             compositionMonsters.Add(monster);
                         }
 
-                        await compositionRepository.AddMonstersAsync(newComposition.Id, compositionMonsters);
+                        await compositionRepository.AddCompositionWithMonstersAsync(newComposition, compositionMonsters);
 
                         if (cancellationToken.IsCancellationRequested)
                             return;
@@ -202,50 +198,65 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
         // Helper: Generate all equipment/stat combos for a team
         private static IEnumerable<List<CompositionMonstersEntity>> GenerateEquipmentAndStats(List<CompositionMonstersEntity> team)
         {
-            var allEquipments = Enum.GetValues<Equipments>().Cast<Equipments>();
-            var stats = Enum.GetValues<EquipmentStat>().Cast<EquipmentStat>();
+            var allEquipments = Enum.GetValues<Equipments>().Cast<Equipments>().ToArray();
+            var stats = Enum.GetValues<EquipmentStat>().Cast<EquipmentStat>().ToArray();
 
-            IEnumerable<List<CompositionMonstersEntity>> Expand(int index, List<CompositionMonstersEntity> current)
+            // Cache equipments for each creature to avoid repeated reflection and allocations
+            var allowedPerCreature = new Equipments[team.Count][];
+            for (var i = 0; i < team.Count; i++)
+            {
+                var creatureName = team[i].Name;
+                var canParse = Enum.TryParse<Creatures>(creatureName, out var creature);
+                var allowedEquipments = canParse ? creature.GetAllowedEquipments() : Array.Empty<Equipments>();
+                allowedPerCreature[i] = allowedEquipments.Length > 0
+                    ? allowedEquipments
+                    : canParse
+                        ? allEquipments.Where(eq => !creature.SkipEquipment(eq)).ToArray()
+                        : allEquipments;
+            }
+
+            var current = new CompositionMonstersEntity[team.Count];
+
+            IEnumerable<List<CompositionMonstersEntity>> Expand(int index)
             {
                 if (index == team.Count)
                 {
-                    yield return current;
+                    // materialize a copy for the caller
+                    yield return current.Select(c => new CompositionMonstersEntity
+                    {
+                        Name = c.Name,
+                        Equipment = c.Equipment,
+                        EquipmentStat = c.EquipmentStat,
+                        Hitpoints = c.Hitpoints,
+                        Attack = c.Attack,
+                        AbilityPower = c.AbilityPower,
+                        Armor = c.Armor,
+                        MagicResistance = c.MagicResistance,
+                        Level = c.Level,
+                        EquipmentTier = c.EquipmentTier
+                    }).ToList();
                     yield break;
                 }
 
-                var creatureName = team[index].Name;
-                var canParse = Enum.TryParse<Creatures>(creatureName, out var creature);
-
-                // Se houver AllowedEquipments, use apenas eles. Senão, use todos exceto os do SkipEquipment.
-                var allowedEquipments = canParse ? creature.GetAllowedEquipments() : [];
-                var equipmentsToUse = allowedEquipments.Length > 0
-                    ? allowedEquipments
-                    : canParse
-                        ? allEquipments.Where(eq => !creature.SkipEquipment(eq))
-                        : allEquipments;
-
-                foreach (var eq in equipmentsToUse)
+                foreach (var eq in allowedPerCreature[index])
                 {
                     foreach (var stat in stats)
                     {
-                        var next = new List<CompositionMonstersEntity>(current)
-                {
-                    new()
-                    {
-                        Name = team[index].Name,
-                        Equipment = eq,
-                        EquipmentStat = stat,
-                        Hitpoints = team[index].Hitpoints,
-                        Attack = team[index].Attack,
-                        AbilityPower = team[index].AbilityPower,
-                        Armor = team[index].Armor,
-                        MagicResistance = team[index].MagicResistance,
-                        Level = team[index].Level,
-                        EquipmentTier = team[index].EquipmentTier
-                    }
-                };
+                        current[index] = new CompositionMonstersEntity
+                        {
+                            Name = team[index].Name,
+                            Equipment = eq,
+                            EquipmentStat = stat,
+                            Hitpoints = team[index].Hitpoints,
+                            Attack = team[index].Attack,
+                            AbilityPower = team[index].AbilityPower,
+                            Armor = team[index].Armor,
+                            MagicResistance = team[index].MagicResistance,
+                            Level = team[index].Level,
+                            EquipmentTier = team[index].EquipmentTier
+                        };
 
-                        foreach (var result in Expand(index + 1, next))
+                        foreach (var result in Expand(index + 1))
                         {
                             yield return result;
                         }
@@ -253,7 +264,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
                 }
             }
 
-            return Expand(0, []);
+            return Expand(0);
         }
 
         // Helper: Compute a unique hash for a composition
