@@ -59,7 +59,11 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
 
                     foreach (var composition in compositions)
                     {
-                        var reserved = await distributedLockFactory.CreateLockAsync($"composition:{composition.Id}:reserved", ReservationTtl);
+                        var reserved = await distributedLockFactory.CreateLockAsync(
+                            $"composition:{composition.Id}:reserved",
+                            ReservationTtl,
+                            TimeSpan.Zero,
+                            TimeSpan.Zero);
                         if (!reserved.IsAcquired)
                         {
                             excludedIds.Add(composition.Id);

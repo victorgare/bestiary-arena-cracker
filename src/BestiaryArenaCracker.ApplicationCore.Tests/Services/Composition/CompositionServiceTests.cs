@@ -29,7 +29,12 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
             var redLock = Substitute.For<IRedLock>();
             redLock.IsAcquired.Returns(true);
             redLock.DisposeAsync().Returns(ValueTask.CompletedTask);
-            _lockFactory.CreateLockAsync(Arg.Any<string>(), Arg.Any<TimeSpan>())
+            _lockFactory
+                .CreateLockAsync(
+                    Arg.Any<string>(),
+                    Arg.Any<TimeSpan>(),
+                    Arg.Any<TimeSpan>(),
+                    Arg.Any<TimeSpan>())
                 .Returns(Task.FromResult(redLock));
 
             var inUseField = typeof(CompositionService).GetField("_inUse", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
