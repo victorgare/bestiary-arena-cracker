@@ -25,7 +25,17 @@ var granafa = builder.AddContainer("grafana", "grafana/grafana")
                     .WithEnvironment("GF_PATHS_PROVISIONING", "/etc/grafana/provisioning");
 
 var nodeExporter = builder.AddContainer("node-exporter", "prom/node-exporter:latest")
-    .WithHttpEndpoint(port: 9100, targetPort: 9100, name: "http");
+    .WithHttpEndpoint(port: 9100, targetPort: 9100, name: "http")
+    .WithBindMount("/proc", "/host/proc", isReadOnly: true)
+    .WithBindMount("/sys", "/host/sys", isReadOnly: true)
+    .WithBindMount("/", "/rootfs", isReadOnly: true)
+    .WithArgs("--path.procfs=/host/proc", "--path.sysfs=/host/sys", "--path.rootfs=/rootfs");
+
+var cAdvisor = builder.AddContainer("cadvisor", "gcr.io/cadvisor/cadvisor:latest")
+    .WithHttpEndpoint(port: 6800, targetPort: 8080, name: "http")
+    .WithBindMount("/var/run/docker.sock", "/var/run/docker.sock")
+    .WithBindMount("/sys", "/sys", isReadOnly: true)
+    .WithBindMount("/var/lib/docker", "/var/lib/docker", isReadOnly: true);
 
 builder.AddOpenTelemetryCollector("otelcollector", "../../infra/otelcollector/config.yaml")
        .WithEnvironment("PROMETHEUS_ENDPOINT", $"{prometheus.GetEndpoint("http")}/api/v1/otlp")
