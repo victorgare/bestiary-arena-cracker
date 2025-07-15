@@ -35,7 +35,9 @@ var cAdvisor = builder.AddContainer("cadvisor", "gcr.io/cadvisor/cadvisor:latest
     .WithHttpEndpoint(port: 6800, targetPort: 8080, name: "http")
     .WithBindMount("/var/run/docker.sock", "/var/run/docker.sock")
     .WithBindMount("/sys", "/sys", isReadOnly: true)
-    .WithBindMount("/var/lib/docker", "/var/lib/docker", isReadOnly: true);
+    .WithBindMount("/sys/fs/cgroup", "/sys/fs/cgroup", isReadOnly: true)
+    .WithBindMount("/var/lib/docker", "/var/lib/docker", isReadOnly: true)
+    .WithBindMount("/", "/rootfs", isReadOnly: true);
 
 builder.AddOpenTelemetryCollector("otelcollector", "../../infra/otelcollector/config.yaml")
        .WithEnvironment("PROMETHEUS_ENDPOINT", $"{prometheus.GetEndpoint("http")}/api/v1/otlp")
