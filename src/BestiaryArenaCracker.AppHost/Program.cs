@@ -14,6 +14,12 @@ var loki = builder.AddContainer("loki", "grafana/loki:latest")
     .WithArgs("-config.expand-env=true")
     .WithHttpEndpoint(port: 5400, targetPort: 3100, name: "http");
 
+var nodeExporter = builder.AddContainer("node-exporter", "prom/node-exporter")
+    .WithHttpEndpoint(targetPort: 9100, name: "http");
+
+var cadvisor = builder.AddContainer("cadvisor", "gcr.io/cadvisor/cadvisor")
+    .WithHttpEndpoint(targetPort: 8080, name: "http");
+
 var granafa = builder.AddContainer("grafana", "grafana/grafana")
                     .WithHttpEndpoint(port: 5300, targetPort: 3000, name: "http")
                     .WithBindMount("../../infra/grafana/config", "/etc/grafana")

@@ -43,6 +43,12 @@ You can also run the API or UI individually.
 
 The UI will be available by default at `http://localhost:3000`.
 
+## Monitoring
+
+When the application host is started it now also launches Node Exporter and cAdvisor.
+Prometheus scrapes these exporters and Grafana provides a `Node Metrics` dashboard
+showing CPU, memory and disk usage for the running containers.
+
 ## Running tests
 
 Execute the unit tests for the solution with:
