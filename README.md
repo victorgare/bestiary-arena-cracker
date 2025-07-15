@@ -30,6 +30,11 @@ Start the distributed application host which launches the API, database containe
 dotnet run --project src/BestiaryArenaCracker.AppHost
 ```
 
+The application host also starts a monitoring stack consisting of Prometheus, Grafana,
+and Loki for logs. A new Node Exporter container collects CPU, memory and disk
+usage metrics from the host. These metrics are scraped by Prometheus and visualised
+in Grafana using the `nodeexporter` dashboard.
+
 You can also run the API or UI individually.
 
 ```bash

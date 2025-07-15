@@ -24,6 +24,9 @@ var granafa = builder.AddContainer("grafana", "grafana/grafana")
                     .WithEnvironment("PROMETHEUS_ENDPOINT", prometheus.GetEndpoint("http"))
                     .WithEnvironment("GF_PATHS_PROVISIONING", "/etc/grafana/provisioning");
 
+var nodeExporter = builder.AddContainer("node-exporter", "prom/node-exporter:latest")
+    .WithHttpEndpoint(port: 9100, targetPort: 9100, name: "http");
+
 builder.AddOpenTelemetryCollector("otelcollector", "../../infra/otelcollector/config.yaml")
        .WithEnvironment("PROMETHEUS_ENDPOINT", $"{prometheus.GetEndpoint("http")}/api/v1/otlp")
        .WithEnvironment("LOKI_ENDPOINT", $"{loki.GetEndpoint("http")}/loki/api/v1/push");
