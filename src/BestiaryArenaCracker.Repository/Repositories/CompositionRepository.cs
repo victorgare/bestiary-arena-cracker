@@ -23,6 +23,18 @@ namespace BestiaryArenaCracker.Repository.Repositories
             await dbContext.SaveChangesAsync();
         }
 
+        public async Task<CompositionEntity> AddCompositionWithMonstersAsync(CompositionEntity entity, IEnumerable<CompositionMonstersEntity> monsters)
+        {
+            dbContext.Compositions.Add(entity);
+            dbContext.CompositionMonsters.AddRange(monsters.Select(m =>
+            {
+                m.Composition = entity;
+                return m;
+            }));
+            await dbContext.SaveChangesAsync();
+            return entity;
+        }
+
         public Task AddResults(int compositionId, CompositionResultsEntity[] results)
         {
             dbContext.CompositionResults.AddRange(results.Select(r =>
