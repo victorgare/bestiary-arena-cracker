@@ -6,7 +6,7 @@ var prometheus = builder
     .AddContainer("prometheus", "prom/prometheus", "v3.2.1")
     .WithBindMount("../../infra/prometheus", "/etc/prometheus", isReadOnly: true)
     .WithArgs("--web.enable-otlp-receiver", "--config.file=/etc/prometheus/prometheus.yml")
-    .WithHttpEndpoint(targetPort: 9090, name: "http");
+    .WithHttpEndpoint(port: 5500, targetPort: 9090, name: "http");
 
 var loki = builder.AddContainer("loki", "grafana/loki:latest")
     .WithBindMount("../../infra/loki", "/etc/loki")
@@ -23,21 +23,6 @@ var granafa = builder.AddContainer("grafana", "grafana/grafana")
                     .WithEnvironment("GF_INSTALL_PLUGINS", "https://storage.googleapis.com/integration-artifacts/grafana-lokiexplore-app/grafana-lokiexplore-app-latest.zip;grafana-lokiexplore-app")
                     .WithEnvironment("PROMETHEUS_ENDPOINT", prometheus.GetEndpoint("http"))
                     .WithEnvironment("GF_PATHS_PROVISIONING", "/etc/grafana/provisioning");
-
-var nodeExporter = builder.AddContainer("node-exporter", "prom/node-exporter:latest")
-    .WithHttpEndpoint(port: 9100, targetPort: 9100, name: "http")
-    .WithBindMount("/proc", "/host/proc", isReadOnly: true)
-    .WithBindMount("/sys", "/host/sys", isReadOnly: true)
-    .WithBindMount("/", "/rootfs", isReadOnly: true)
-    .WithArgs("--path.procfs=/host/proc", "--path.sysfs=/host/sys", "--path.rootfs=/rootfs");
-
-var cAdvisor = builder.AddContainer("cadvisor", "gcr.io/cadvisor/cadvisor:latest")
-    .WithHttpEndpoint(port: 6800, targetPort: 8080, name: "http")
-    .WithBindMount("/var/run/docker.sock", "/var/run/docker.sock")
-    .WithBindMount("/sys", "/sys", isReadOnly: true)
-    .WithBindMount("/sys/fs/cgroup", "/sys/fs/cgroup", isReadOnly: true)
-    .WithBindMount("/var/lib/docker", "/var/lib/docker", isReadOnly: true)
-    .WithBindMount("/", "/rootfs", isReadOnly: true);
 
 builder.AddOpenTelemetryCollector("otelcollector", "../../infra/otelcollector/config.yaml")
        .WithEnvironment("PROMETHEUS_ENDPOINT", $"{prometheus.GetEndpoint("http")}/api/v1/otlp")
