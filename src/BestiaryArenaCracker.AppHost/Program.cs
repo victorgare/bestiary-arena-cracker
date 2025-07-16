@@ -6,7 +6,7 @@ var prometheus = builder
     .AddContainer("prometheus", "prom/prometheus", "v3.2.1")
     .WithBindMount("../../infra/prometheus", "/etc/prometheus", isReadOnly: true)
     .WithArgs("--web.enable-otlp-receiver", "--config.file=/etc/prometheus/prometheus.yml")
-    .WithHttpEndpoint(targetPort: 9090, name: "http");
+    .WithHttpEndpoint(port: 5500, targetPort: 9090, name: "http");
 
 var loki = builder.AddContainer("loki", "grafana/loki:latest")
     .WithBindMount("../../infra/loki", "/etc/loki")
