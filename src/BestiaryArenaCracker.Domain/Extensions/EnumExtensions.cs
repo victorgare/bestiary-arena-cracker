@@ -6,6 +6,18 @@ namespace BestiaryArenaCracker.Domain.Extensions
 {
     public static class EnumExtensions
     {
+        private static readonly Dictionary<Creatures, Equipments[]> _allowedEquipmentCache;
+
+        static EnumExtensions()
+        {
+            _allowedEquipmentCache = Enum.GetValues<Creatures>()
+                .ToDictionary(c => c, c =>
+                {
+                    var member = typeof(Creatures).GetMember(c.ToString()).FirstOrDefault();
+                    var attr = member?.GetCustomAttribute<AllowedEquipmentsAttribute>();
+                    return attr?.Equipments ?? Array.Empty<Equipments>();
+                });
+        }
         public static string GetDescription<TEnum>(this TEnum value) where TEnum : Enum
         {
             var type = value.GetType();
@@ -51,9 +63,9 @@ namespace BestiaryArenaCracker.Domain.Extensions
 
         public static Equipments[] GetAllowedEquipments(this Creatures creature)
         {
-            var member = typeof(Creatures).GetMember(creature.ToString()).FirstOrDefault();
-            var attr = member?.GetCustomAttribute<AllowedEquipmentsAttribute>();
-            return attr?.Equipments ?? [];
+            if (_allowedEquipmentCache.TryGetValue(creature, out var values))
+                return values;
+            return Array.Empty<Equipments>();
         }
     }
 }
