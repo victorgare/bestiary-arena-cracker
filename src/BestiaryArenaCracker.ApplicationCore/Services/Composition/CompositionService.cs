@@ -59,7 +59,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
 
                     foreach (var composition in compositions)
                     {
-                        var reserved = await distributedLockFactory.CreateLockAsync(
+                        await using var reserved = await distributedLockFactory.CreateLockAsync(
                             $"composition:{composition.Id}:reserved",
                             ReservationTtl,
                             TimeSpan.Zero,
@@ -181,10 +181,12 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
 
                 foreach (var team in GetCombinations(allCreatures, teamSize))
                 {
-                    yield return team.Select(c => new CompositionMonstersEntity
+                    var list = new List<CompositionMonstersEntity>(teamSize);
+                    foreach (var c in team)
                     {
-                        Name = c.ToString()
-                    }).ToList();
+                        list.Add(new CompositionMonstersEntity { Name = c.ToString() });
+                    }
+                    yield return list;
                 }
             }
         }
@@ -195,31 +197,49 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
             var freeTiles = room.File.Data.GetFreeTiles();
             foreach (var positions in GetCombinations(freeTiles, teamSize))
             {
-                yield return positions.ToList();
+                var list = new List<int>(teamSize);
+                list.AddRange(positions);
+                yield return list;
             }
         }
 
         // Helper: Generate all equipment/stat combos for a team
         private static IEnumerable<List<CompositionMonstersEntity>> GenerateEquipmentAndStats(List<CompositionMonstersEntity> team)
         {
-            var allEquipments = Enum.GetValues<Equipments>().Cast<Equipments>().ToArray();
-            var stats = Enum.GetValues<EquipmentStat>().Cast<EquipmentStat>().ToArray();
+            var allEquipments = Enum.GetValues<Equipments>();
+            var stats = Enum.GetValues<EquipmentStat>();
 
-            // Cache equipments for each creature to avoid repeated reflection and allocations
             var allowedPerCreature = new Equipments[team.Count][];
             for (var i = 0; i < team.Count; i++)
             {
-                var creatureName = team[i].Name;
-                var canParse = Enum.TryParse<Creatures>(creatureName, out var creature);
-                var allowedEquipments = canParse ? creature.GetAllowedEquipments() : Array.Empty<Equipments>();
-                allowedPerCreature[i] = allowedEquipments.Length > 0
-                    ? allowedEquipments
-                    : canParse
-                        ? allEquipments.Where(eq => !creature.SkipEquipment(eq)).ToArray()
-                        : allEquipments;
+                if (Enum.TryParse<Creatures>(team[i].Name, out var creature))
+                {
+                    var allowed = creature.GetAllowedEquipments();
+                    allowedPerCreature[i] = allowed.Length > 0
+                        ? allowed
+                        : allEquipments.Where(eq => !creature.SkipEquipment(eq)).ToArray();
+                }
+                else
+                {
+                    allowedPerCreature[i] = allEquipments.ToArray();
+                }
             }
 
             var current = new CompositionMonstersEntity[team.Count];
+            for (int i = 0; i < team.Count; i++)
+            {
+                current[i] = new CompositionMonstersEntity
+                {
+                    Name = team[i].Name,
+                    Hitpoints = team[i].Hitpoints,
+                    Attack = team[i].Attack,
+                    AbilityPower = team[i].AbilityPower,
+                    Armor = team[i].Armor,
+                    MagicResistance = team[i].MagicResistance,
+                    Level = team[i].Level,
+                    EquipmentTier = team[i].EquipmentTier
+                };
+            }
 
             IEnumerable<List<CompositionMonstersEntity>> Expand(int index)
             {
@@ -246,19 +266,8 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
                 {
                     foreach (var stat in stats)
                     {
-                        current[index] = new CompositionMonstersEntity
-                        {
-                            Name = team[index].Name,
-                            Equipment = eq,
-                            EquipmentStat = stat,
-                            Hitpoints = team[index].Hitpoints,
-                            Attack = team[index].Attack,
-                            AbilityPower = team[index].AbilityPower,
-                            Armor = team[index].Armor,
-                            MagicResistance = team[index].MagicResistance,
-                            Level = team[index].Level,
-                            EquipmentTier = team[index].EquipmentTier
-                        };
+                        current[index].Equipment = eq;
+                        current[index].EquipmentStat = stat;
 
                         foreach (var result in Expand(index + 1))
                         {
@@ -295,23 +304,28 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
         // Helper: Get all combinations of a list (n choose k)
         private static IEnumerable<List<T>> GetCombinations<T>(IEnumerable<T> list, int length)
         {
-            if (length == 0)
+            var items = list.ToArray();
+            if (length == 0 || length > items.Length)
+                yield break;
+
+            var indices = Enumerable.Range(0, length).ToArray();
+            var result = new T[length];
+
+            while (true)
             {
-                yield return new List<T>();
-            }
-            else
-            {
-                int i = 0;
-                foreach (var item in list)
-                {
-                    var remaining = list.Skip(i + 1);
-                    foreach (var combo in GetCombinations(remaining, length - 1))
-                    {
-                        combo.Insert(0, item);
-                        yield return combo;
-                    }
-                    i++;
-                }
+                for (int i = 0; i < length; i++)
+                    result[i] = items[indices[i]];
+                yield return new List<T>(result);
+
+                int t = length - 1;
+                while (t >= 0 && indices[t] == items.Length - length + t)
+                    t--;
+                if (t < 0)
+                    break;
+
+                indices[t]++;
+                for (int i = t + 1; i < length; i++)
+                    indices[i] = indices[i - 1] + 1;
             }
         }
 
