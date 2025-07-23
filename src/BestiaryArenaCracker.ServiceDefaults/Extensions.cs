@@ -49,6 +49,9 @@ public static class Extensions
                        .AddHttpClientInstrumentation()
                        .AddRuntimeInstrumentation()
                        .AddProcessInstrumentation()
+                       .AddMeter("System.Runtime")
+                       .AddMeter("Microsoft.AspNetCore.Hosting")
+                       .AddMeter("Microsoft.AspNetCore.Server.Kestrel")
                        .AddPrometheusExporter();
             })
             .WithTracing(tracing =>

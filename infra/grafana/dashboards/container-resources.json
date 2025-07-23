@@ -32,21 +32,14 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {
-                "color": "green"
-              }
+              { "color": "green" }
             ]
           },
           "unit": "s"
         },
         "overrides": []
       },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 0,
-        "y": 0
-      },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
       "id": 1,
       "options": {
         "colorMode": "value",
@@ -55,9 +48,7 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": [ "lastNotNull" ],
           "fields": "",
           "values": false
         },
@@ -68,7 +59,7 @@
       "pluginVersion": "",
       "targets": [
         {
-          "expr": "sum(process_cpu_time_seconds_total{job=\"$job\"})",
+          "expr": "sum(sum by (cpu_mode) (dotnet_process_cpu_time_seconds_total{job=\"$job\"}))",
           "refId": "A"
         }
       ],
@@ -82,29 +73,16 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "orange",
-                "value": 1000000000
-              },
-              {
-                "color": "red",
-                "value": 1500000000
-              }
+              { "color": "green" },
+              { "color": "orange", "value": 1000000000 },
+              { "color": "red", "value": 1500000000 }
             ]
           },
           "unit": "bytes"
         },
         "overrides": []
       },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 6,
-        "y": 0
-      },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
       "id": 2,
       "options": {
         "colorMode": "value",
@@ -113,9 +91,7 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": [ "lastNotNull" ],
           "fields": "",
           "values": false
         },
@@ -126,11 +102,11 @@
       "pluginVersion": "",
       "targets": [
         {
-          "expr": "process_memory_usage_bytes{job=\"$job\"}",
+          "expr": "dotnet_process_memory_working_set_bytes{job=\"$job\"}",
           "refId": "A"
         }
       ],
-      "title": "Memory Usage (bytes)",
+      "title": "Memory Usage (Working Set)",
       "type": "stat"
     },
     {
@@ -140,28 +116,15 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "orange",
-                "value": 80
-              },
-              {
-                "color": "red",
-                "value": 100
-              }
+              { "color": "green" },
+              { "color": "orange", "value": 80 },
+              { "color": "red", "value": 100 }
             ]
           }
         },
         "overrides": []
       },
-      "gridPos": {
-        "h": 4,
-        "w": 4,
-        "x": 12,
-        "y": 0
-      },
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 0 },
       "id": 3,
       "options": {
         "colorMode": "value",
@@ -170,9 +133,7 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": [ "lastNotNull" ],
           "fields": "",
           "values": false
         },
@@ -187,7 +148,7 @@
           "refId": "A"
         }
       ],
-      "title": "Thread Count",
+      "title": "Thread Count (OS)",
       "type": "stat"
     },
     {
@@ -197,29 +158,16 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "orange",
-                "value": 800000000000
-              },
-              {
-                "color": "red",
-                "value": 1000000000000
-              }
+              { "color": "green" },
+              { "color": "orange", "value": 800000000000 },
+              { "color": "red", "value": 1000000000000 }
             ]
           },
           "unit": "bytes"
         },
         "overrides": []
       },
-      "gridPos": {
-        "h": 4,
-        "w": 8,
-        "x": 16,
-        "y": 0
-      },
+      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 0 },
       "id": 4,
       "options": {
         "colorMode": "value",
@@ -228,9 +176,7 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": [ "lastNotNull" ],
           "fields": "",
           "values": false
         },
@@ -241,39 +187,24 @@
       "pluginVersion": "",
       "targets": [
         {
-          "expr": "process_runtime_dotnet_gc_allocations_size_bytes_total{job=\"$job\"}",
+          "expr": "dotnet_gc_heap_total_allocated_bytes_total{job=\"$job\"}",
           "refId": "A"
         }
       ],
-      "title": "GC Allocations (bytes)",
+      "title": "GC Allocations (total bytes)",
       "type": "stat"
     },
     {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "fieldConfig": {
         "defaults": {
           "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              }
-            ]
-          },
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green" } ] },
           "unit": "bytes"
         },
         "overrides": []
       },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 0,
-        "y": 4
-      },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 4 },
       "id": 5,
       "options": {
         "colorMode": "value",
@@ -282,9 +213,7 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": [ "lastNotNull" ],
           "fields": "",
           "values": false
         },
@@ -295,39 +224,24 @@
       "pluginVersion": "",
       "targets": [
         {
-          "expr": "process_runtime_dotnet_gc_committed_memory_size_bytes{job=\"$job\"}",
+          "expr": "dotnet_gc_last_collection_memory_committed_size_bytes{job=\"$job\"}",
           "refId": "A"
         }
       ],
-      "title": "GC Committed Memory",
+      "title": "GC Committed Memory (last GC)",
       "type": "stat"
     },
     {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
+      "datasource": { "type": "prometheus", "uid": "PBFA97CFB590B2093" },
       "fieldConfig": {
         "defaults": {
           "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              }
-            ]
-          },
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green" } ] },
           "unit": "bytes"
         },
         "overrides": []
       },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 6,
-        "y": 4
-      },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 4 },
       "id": 6,
       "options": {
         "colorMode": "value",
@@ -336,9 +250,7 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": [ "lastNotNull" ],
           "fields": "",
           "values": false
         },
@@ -349,11 +261,11 @@
       "pluginVersion": "",
       "targets": [
         {
-          "expr": "process_runtime_dotnet_gc_objects_size_bytes{job=\"$job\"}",
+          "expr": "sum(dotnet_gc_last_collection_heap_size_bytes{job=\"$job\"})",
           "refId": "A"
         }
       ],
-      "title": "GC Heap Objects (bytes)",
+      "title": "GC Heap Objects (bytes vivos)",
       "type": "stat"
     },
     {
@@ -363,24 +275,14 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
+              { "color": "green" },
+              { "color": "red", "value": 80 }
             ]
           }
         },
         "overrides": []
       },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 12,
-        "y": 4
-      },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 4 },
       "id": 7,
       "options": {
         "colorMode": "value",
@@ -389,9 +291,7 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": [ "lastNotNull" ],
           "fields": "",
           "values": false
         },
@@ -402,11 +302,11 @@
       "pluginVersion": "",
       "targets": [
         {
-          "expr": "process_runtime_dotnet_thread_pool_threads_count{job=\"$job\"}",
+          "expr": "dotnet_thread_pool_thread_count_total{job=\"$job\"}",
           "refId": "A"
         }
       ],
-      "title": "Thread Pool Count",
+      "title": "Thread Pool Count (.NET)",
       "type": "stat"
     },
     {
@@ -416,28 +316,15 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "orange",
-                "value": 100
-              },
-              {
-                "color": "red",
-                "value": 200
-              }
+              { "color": "green" },
+              { "color": "orange", "value": 100 },
+              { "color": "red", "value": 200 }
             ]
           }
         },
         "overrides": []
       },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 18,
-        "y": 4
-      },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 4 },
       "id": 8,
       "options": {
         "colorMode": "value",
@@ -446,9 +333,7 @@
         "orientation": "auto",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": [ "lastNotNull" ],
           "fields": "",
           "values": false
         },
@@ -459,7 +344,7 @@
       "pluginVersion": "",
       "targets": [
         {
-          "expr": "process_runtime_dotnet_exceptions_count_total{job=\"$job\"}",
+          "expr": "sum(dotnet_exceptions_total{job=\"$job\"})",
           "refId": "A"
         }
       ],
@@ -469,9 +354,7 @@
     {
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
+          "color": { "mode": "palette-classic" },
           "custom": {
             "axisBorderShow": false,
             "axisCenteredZero": false,
@@ -483,52 +366,31 @@
             "drawStyle": "line",
             "fillOpacity": 0,
             "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
             "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
+            "scaleDistribution": { "type": "linear" },
             "showPoints": "auto",
             "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "off" }
           },
           "decimals": 2,
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
+              { "color": "green" },
+              { "color": "red", "value": 80 }
             ]
           },
           "unit": "ops"
         },
         "overrides": []
       },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 8
-      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
       "id": 9,
       "options": {
         "legend": {
@@ -537,28 +399,22 @@
           "placement": "bottom",
           "showLegend": true
         },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "single",
-          "sort": "none"
-        }
+        "tooltip": { "hideZeros": false, "mode": "single", "sort": "none" }
       },
       "pluginVersion": "",
       "targets": [
         {
-          "expr": "rate(process_runtime_dotnet_gc_collections_count_total{job=\"$job\"}[1m])",
+          "expr": "rate(dotnet_gc_collections_total{job=\"$job\"}[1m])",
           "refId": "A"
         }
       ],
-      "title": "GC Collections por Geração",
+      "title": "GC Collections por Geração (rate/1m)",
       "type": "timeseries"
     },
     {
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
+          "color": { "mode": "palette-classic" },
           "custom": {
             "axisBorderShow": false,
             "axisCenteredZero": false,
@@ -570,52 +426,31 @@
             "drawStyle": "line",
             "fillOpacity": 0,
             "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
             "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
+            "scaleDistribution": { "type": "linear" },
             "showPoints": "auto",
             "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "off" }
           },
           "decimals": 2,
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
+              { "color": "green" },
+              { "color": "red", "value": 80 }
             ]
           },
           "unit": "percentunit"
         },
         "overrides": []
       },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 8
-      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
       "id": 10,
       "options": {
         "legend": {
@@ -624,28 +459,23 @@
           "placement": "bottom",
           "showLegend": true
         },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "single",
-          "sort": "none"
-        }
+        "tooltip": { "hideZeros": false, "mode": "single", "sort": "none" }
       },
       "pluginVersion": "",
       "targets": [
         {
-          "expr": "rate(process_runtime_dotnet_gc_duration_nanoseconds_total{job=\"$job\"}[1m]) / 1e9",
+          "expr": "rate(dotnet_gc_pause_time_seconds_total{job=\"$job\"}[1m])",
           "refId": "A"
         }
       ],
-      "title": "% Tempo gasto em GC",
+      "title": "Tempo gasto em GC (s/s → %)",
+      "transformations": [],
       "type": "timeseries"
     },
     {
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
+          "color": { "mode": "palette-classic" },
           "custom": {
             "axisBorderShow": false,
             "axisCenteredZero": false,
@@ -657,52 +487,31 @@
             "drawStyle": "line",
             "fillOpacity": 0,
             "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
             "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
+            "scaleDistribution": { "type": "linear" },
             "showPoints": "auto",
             "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
+            "stacking": { "group": "A", "mode": "normal" },
+            "thresholdsStyle": { "mode": "off" }
           },
           "decimals": 2,
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
+              { "color": "green" },
+              { "color": "red", "value": 80 }
             ]
           },
           "unit": "bytes"
         },
         "overrides": []
       },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 16
-      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
       "id": 11,
       "options": {
         "legend": {
@@ -711,28 +520,22 @@
           "placement": "bottom",
           "showLegend": true
         },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "single",
-          "sort": "none"
-        }
+        "tooltip": { "hideZeros": false, "mode": "single", "sort": "none" }
       },
       "pluginVersion": "",
       "targets": [
         {
-          "expr": "process_runtime_dotnet_gc_heap_size_bytes{job=\"$job\"}",
+          "expr": "dotnet_gc_last_collection_heap_size_bytes{job=\"$job\"}",
           "refId": "A"
         }
       ],
-      "title": "Alocação por geração de heap (bytes)",
+      "title": "Heap por geração (última GC)",
       "type": "timeseries"
     },
     {
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
+          "color": { "mode": "palette-classic" },
           "custom": {
             "axisBorderShow": false,
             "axisCenteredZero": false,
@@ -744,51 +547,30 @@
             "drawStyle": "heatmap",
             "fillOpacity": 80,
             "gradientMode": "scheme",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
             "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
+            "scaleDistribution": { "type": "linear" },
             "showPoints": "auto",
             "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "off" }
           },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
+              { "color": "green" },
+              { "color": "red", "value": 80 }
             ]
           },
           "unit": "ops"
         },
         "overrides": []
       },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 16
-      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
       "id": 12,
       "options": {
         "legend": {
@@ -797,16 +579,12 @@
           "placement": "bottom",
           "showLegend": true
         },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "single",
-          "sort": "none"
-        }
+        "tooltip": { "hideZeros": false, "mode": "single", "sort": "none" }
       },
       "pluginVersion": "",
       "targets": [
         {
-          "expr": "rate(process_runtime_dotnet_gc_collections_count_total{job=\"$job\"}[1m])",
+          "expr": "rate(dotnet_gc_collections_total{job=\"$job\"}[1m])",
           "refId": "A"
         }
       ],
@@ -814,16 +592,8 @@
       "type": "timeseries"
     },
     {
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 24
-      },
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 24 },
       "id": 13,
       "options": {
         "code": {
@@ -831,7 +601,7 @@
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "**🔍 Guia rápido de interpretação:**\n\n- **CPU Time**: soma do tempo de CPU em modo usuário + sistema. Se cresce rápido, há processamento intenso.\n- **Memory Usage**: RAM usada pelo processo. Se sobe sem cair, pode ser vazamento.\n- **Thread Count**: número total de threads em execução.\n- **GC Allocations**: total de memória alocada desde o início. Sobe conforme a aplicação trabalha.\n- **GC Committed Memory**: memória reservada para o heap do GC, incluindo buffers futuros.\n- **GC Heap Objects**: objetos vivos que ainda não foram coletados pelo GC.\n- **Thread Pool Count**: threads disponíveis no pool de .NET para lidar com tarefas.\n- **Exceptions Thrown**: número total de exceções disparadas (não significa erro fatal).\n- **GC Collections por geração**: frequência com que cada geração do GC está sendo executada.\n- **% Tempo em GC**: quanto da execução está sendo consumida pelo Garbage Collector.\n- **Alocação por geração**: crescimento e uso de memória por geração (gen0, gen1, gen2, LOH, POH).\n- **Heatmap de frequência de GC**: visualização de intensidade e picos de coleta.\n\n**📌 Fique de olho nessas métricas:**\n- **Memory Usage**: se subir continuamente sem cair, pode ser vazamento de memória.\n- **GC Allocations**: se crescer rápido demais, o código pode estar alocando memória excessivamente.\n- **Thread Count**: aumento constante pode indicar problemas com tarefas em background ou falta de liberação de recursos.\n- **Exceptions Thrown**: se o número sobe muito rápido, há erros sendo gerados em massa (mesmo que não sejam fatais).\n- **% Tempo em GC**: acima de 20% consistentemente é um gargalo crítico.",
+        "content": "**🔍 Guia rápido de interpretação (atualizado p/ System.Runtime):**\n\n- **CPU Time**: soma user+system reportado pelo processo .NET.\n- **Memory Usage (Working Set)**: memória física em uso pelo processo.\n- **Thread Count (OS)**: threads de SO; útil p/ leaks de thread.\n- **GC Allocations**: bytes alocados desde o start. Use rate() p/ ver pressão.\n- **GC Committed Memory**: memória comprometida p/ heap na última GC.\n- **GC Heap Objects**: soma dos bytes vivos (gen0+gen1+gen2+LOH+POH) na última GC.\n- **Thread Pool Count (.NET)**: threads gerenciadas pelo pool; spikes indicam saturação.\n- **Exceptions Thrown**: total acumulado; spikes = ruído/erros.\n- **GC Collections por geração**: frequência de GCs; gen2 alta = pressão/retention.\n- **Tempo gasto em GC**: use unidade % no painel; acima de 0.2 (~20%) preocupa.\n- **Heap por geração**: monitora retenção de objetos long-lived.\n- **Heatmap de GC**: rápida leitura de bursts de coleta.\n",
         "mode": "markdown"
       },
       "pluginVersion": "",
@@ -854,19 +624,16 @@
         "includeAll": false,
         "name": "job",
         "options": [],
-        "query": "label_values(process_cpu_time_seconds_total, job)",
+        "query": "label_values({__name__=~\"dotnet_process_cpu_time_seconds_total|process_cpu_time_seconds_total\"}, job)",
         "refresh": 1,
         "type": "query"
       }
     ]
   },
-  "time": {
-    "from": "now-1h",
-    "to": "now"
-  },
+  "time": { "from": "now-1h", "to": "now" },
   "timepicker": {},
   "timezone": "browser",
   "title": "Container resources",
   "uid": "aspire-custom-final",
-  "version": 14
+  "version": 15
 }
