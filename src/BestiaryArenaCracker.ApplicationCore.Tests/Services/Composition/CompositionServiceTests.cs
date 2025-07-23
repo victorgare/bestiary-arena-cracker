@@ -20,10 +20,6 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
             _roomConfigProvider = Substitute.For<IRoomConfigProvider>();
             _roomConfigProvider.BoostedRoomId.Returns(new HashSet<string>());
             _compositionRepository = Substitute.For<ICompositionRepository>();
-
-            var inUseField = typeof(CompositionService).GetField("_inUse", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-            var dict = (System.Collections.Concurrent.ConcurrentDictionary<int, DateTime>)inUseField!.GetValue(null)!;
-            dict.Clear();
         }
 
         [Test]
