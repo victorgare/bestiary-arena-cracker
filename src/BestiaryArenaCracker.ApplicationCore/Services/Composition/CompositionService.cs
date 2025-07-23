@@ -7,42 +7,20 @@ using BestiaryArenaCracker.Domain.Constants;
 using BestiaryArenaCracker.Domain.Entities;
 using BestiaryArenaCracker.Domain.Extensions;
 using BestiaryArenaCracker.Domain.Room;
-using System;
-using RedLockNet;
-using StackExchange.Redis;
-using System.Collections.Concurrent;
 using System.Security.Cryptography;
 
 namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
 {
     public class CompositionService(
         IRoomConfigProvider roomConfigProvider,
-        ICompositionRepository compositionRepository,
-        IConnectionMultiplexer connectionMultiplexer,
-        IDistributedLockFactory distributedLockFactory) : ICompositionService
+        ICompositionRepository compositionRepository) : ICompositionService
     {
-        private static readonly TimeSpan ReservationTtl = TimeSpan.FromMinutes(10);
-        private static readonly ConcurrentDictionary<int, DateTime> _inUse = new();
+        private static readonly TimedResourceLock<int> _compositionLock = new(TimeSpan.FromSeconds(10));
 
         public async Task<IReadOnlyList<CompositionResult>> FindCompositionAsync(int count = 1)
         {
             var allRoomsExceptBoosted = roomConfigProvider.AllRooms.Where(c => !roomConfigProvider.BoostedRoomId.Contains(c.Id));
-            var excludedIds = new HashSet<int>();
             var results = new List<CompositionResult>();
-
-            // clean expired reservations and use them to skip DB lookups
-            var now = DateTime.UtcNow;
-            foreach (var kvp in _inUse.ToArray())
-            {
-                if (kvp.Value <= now)
-                    _inUse.TryRemove(kvp.Key, out _);
-            }
-
-            foreach (var id in _inUse.Keys)
-            {
-                excludedIds.Add(id);
-            }
-
 
             foreach (var room in allRoomsExceptBoosted)
             {
@@ -51,7 +29,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
                     var compositions = await compositionRepository.GetNextAvailableCompositionsAsync(
                         room.Id,
                         ConfigurationConstants.DefaultMinimumCompositionRuns,
-                        excludedIds,
+                        _compositionLock.ReservedValues,
                         count);
 
                     if (compositions.Length == 0)
@@ -59,14 +37,8 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
 
                     foreach (var composition in compositions)
                     {
-                        await using var reserved = await distributedLockFactory.CreateLockAsync(
-                            $"composition:{composition.Id}:reserved",
-                            ReservationTtl,
-                            TimeSpan.Zero,
-                            TimeSpan.Zero);
-                        if (!reserved.IsAcquired)
+                        if (!await _compositionLock.TryAcquireAsync(composition.Id))
                         {
-                            excludedIds.Add(composition.Id);
                             continue;
                         }
 
@@ -81,33 +53,30 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
                             {
                                 Map = room.Name,
                                 Board = [.. monsters.Select(m => new Board
-                            {
-                                Tile = m.TileLocation,
-                                Monster = new Monster
                                 {
-                                    Name = m.Name.ToDisplayName(),
-                                    Hp = m.Hitpoints,
-                                    Ad = m.Attack,
-                                    Ap = m.AbilityPower,
-                                    Armor = m.Armor,
-                                    MagicResist = m.MagicResistance,
-                                    Level = m.Level
-                                },
-                                Equipment = new Equipment
-                                {
-                                    Name = m.Equipment.GetDescription(),
-                                    Stat = m.EquipmentStat.GetDescription(),
-                                    Tier = m.EquipmentTier
-                                }
-                            })]
+                                    Tile = m.TileLocation,
+                                    Monster = new Monster
+                                    {
+                                        Name = m.Name.ToDisplayName(),
+                                        Hp = m.Hitpoints,
+                                        Ad = m.Attack,
+                                        Ap = m.AbilityPower,
+                                        Armor = m.Armor,
+                                        MagicResist = m.MagicResistance,
+                                        Level = m.Level
+                                    },
+                                    Equipment = new Equipment
+                                    {
+                                        Name = m.Equipment.GetDescription(),
+                                        Stat = m.EquipmentStat.GetDescription(),
+                                        Tier = m.EquipmentTier
+                                    }
+                                })]
                             }
                         };
 
                         results.Add(result);
-                        _inUse[composition.Id] = DateTime.UtcNow.Add(ReservationTtl);
                     }
-
-                    count -= results.Count;
                 }
 
                 if (results.Count >= count)
@@ -296,9 +265,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Services.Composition
         public async Task AddResults(int compositionId, CompositionResultsEntity[] compositions)
         {
             await compositionRepository.AddResults(compositionId, compositions);
-            var db = connectionMultiplexer.GetDatabase();
-            await db.KeyDeleteAsync($"composition:{compositionId}:reserved");
-            _inUse.TryRemove(compositionId, out _);
+            _compositionLock.Release(compositionId);
         }
 
         // Helper: Get all combinations of a list (n choose k)

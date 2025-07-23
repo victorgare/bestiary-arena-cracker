@@ -14,7 +14,7 @@ var loki = builder.AddContainer("loki", "grafana/loki:latest")
     .WithArgs("-config.expand-env=true")
     .WithHttpEndpoint(port: 5400, targetPort: 3100, name: "http");
 
-var granafa = builder.AddContainer("grafana", "grafana/grafana")
+builder.AddContainer("grafana", "grafana/grafana")
                     .WithHttpEndpoint(port: 5300, targetPort: 3000, name: "http")
                     .WithBindMount("../../infra/grafana/config", "/etc/grafana")
                     .WithBindMount("../../infra/grafana/dashboards", "/var/lib/grafana/dashboards", isReadOnly: true)
@@ -37,13 +37,6 @@ var bestiaryArenaCrackerSql = builder
     .PublishAsConnectionString()
     .AddDatabase("BestiaryArenaCracker");
 
-var BestiaryArenaCrackerRedis = builder
-    .AddRedis("BestiaryArenaCrackerRedis", 56716)
-    .WithRedisInsight(configureContainer: (options) =>
-    {
-        options.WithHostPort(56717);
-    });
-
 builder
     .AddProject<Projects.BestiaryArenaCracker_MigrationService>("bestiaryarenacracker-migrationservice")
     .WithReference(bestiaryArenaCrackerSql)
@@ -52,9 +45,7 @@ builder
 var bestiaryArenaCrackerApi = builder
     .AddProject<Projects.BestiaryArenaCracker_Api>("bestiaryarenacracker-api")
     .WithReference(bestiaryArenaCrackerSql)
-    .WithReference(BestiaryArenaCrackerRedis)
     .WaitFor(bestiaryArenaCrackerSql)
-    .WaitFor(BestiaryArenaCrackerRedis)
     .WithHttpHealthCheck("/health");
 
 

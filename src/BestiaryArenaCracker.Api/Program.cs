@@ -27,7 +27,6 @@ public class Program
 
         // add dependency
         builder.AddSqlServerDbContext<ApplicationDbContext>("BestiaryArenaCracker");
-        builder.AddRedisClient(connectionName: "BestiaryArenaCrackerRedis");
 
         builder.Services.AddProvidersDependency();
         builder.Services.AddServicesDependency();

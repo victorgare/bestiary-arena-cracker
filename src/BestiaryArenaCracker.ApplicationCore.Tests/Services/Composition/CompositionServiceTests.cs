@@ -4,9 +4,7 @@ using BestiaryArenaCracker.ApplicationCore.Services.Composition;
 using BestiaryArenaCracker.Domain;
 using BestiaryArenaCracker.Domain.Entities;
 using BestiaryArenaCracker.Domain.Room;
-using RedLockNet;
 using NSubstitute;
-using StackExchange.Redis;
 using System.Security.Cryptography;
 
 namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
@@ -15,8 +13,6 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
     {
         private IRoomConfigProvider _roomConfigProvider = null!;
         private ICompositionRepository _compositionRepository = null!;
-        private IConnectionMultiplexer _connectionMultiplexer = null!;
-        private IDistributedLockFactory _lockFactory = null!;
 
         [SetUp]
         public void Setup()
@@ -24,28 +20,10 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
             _roomConfigProvider = Substitute.For<IRoomConfigProvider>();
             _roomConfigProvider.BoostedRoomId.Returns(new HashSet<string>());
             _compositionRepository = Substitute.For<ICompositionRepository>();
-            _connectionMultiplexer = Substitute.For<IConnectionMultiplexer>();
-            _lockFactory = Substitute.For<IDistributedLockFactory>();
-            var redLock = Substitute.For<IRedLock>();
-            redLock.IsAcquired.Returns(true);
-            redLock.DisposeAsync().Returns(ValueTask.CompletedTask);
-            _lockFactory
-                .CreateLockAsync(
-                    Arg.Any<string>(),
-                    Arg.Any<TimeSpan>(),
-                    Arg.Any<TimeSpan>(),
-                    Arg.Any<TimeSpan>())
-                .Returns(Task.FromResult(redLock));
 
             var inUseField = typeof(CompositionService).GetField("_inUse", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
             var dict = (System.Collections.Concurrent.ConcurrentDictionary<int, DateTime>)inUseField!.GetValue(null)!;
             dict.Clear();
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
-            _connectionMultiplexer?.Dispose();
         }
 
         [Test]
@@ -78,12 +56,8 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
                 .Returns(Task.FromResult(new[] { composition }));
             _compositionRepository.GetMonstersByCompositionIdAsync(composition.Id).Returns(Task.FromResult(monsters));
             _compositionRepository.GetResultsCountAsync(composition.Id).Returns(Task.FromResult(0));
-            var db = Substitute.For<IDatabase>();
-            db.StringSetAsync(Arg.Any<RedisKey>(), Arg.Any<RedisValue>(), Arg.Any<TimeSpan?>(), When.NotExists)
-                .Returns(Task.FromResult(true));
-            _connectionMultiplexer.GetDatabase().Returns(db);
 
-            var service = new CompositionService(_roomConfigProvider, _compositionRepository, _connectionMultiplexer, _lockFactory);
+            var service = new CompositionService(_roomConfigProvider, _compositionRepository);
 
             var result = await service.FindCompositionAsync();
 
@@ -98,9 +72,8 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
             _compositionRepository
                 .GetNextAvailableCompositionsAsync(room.Id, Arg.Any<int>(), Arg.Any<IReadOnlySet<int>>())
                 .Returns(Task.FromResult(Array.Empty<CompositionEntity>()));
-            _connectionMultiplexer.GetDatabase().Returns(Substitute.For<IDatabase>());
 
-            var service = new CompositionService(_roomConfigProvider, _compositionRepository, _connectionMultiplexer, _lockFactory);
+            var service = new CompositionService(_roomConfigProvider, _compositionRepository);
 
             var result = await service.FindCompositionAsync();
 
@@ -129,7 +102,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
                     return Task.FromResult(entity);
                 });
 
-            var service = new CompositionService(_roomConfigProvider, _compositionRepository, _connectionMultiplexer, _lockFactory);
+            var service = new CompositionService(_roomConfigProvider, _compositionRepository);
 
             // This will generate all possible compositions for the room
             await service.GenerateAllCompositionsForRoomAsync(room);
@@ -166,7 +139,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
                     return Task.FromResult(entity);
                 });
 
-            var service = new CompositionService(_roomConfigProvider, _compositionRepository, _connectionMultiplexer, _lockFactory);
+            var service = new CompositionService(_roomConfigProvider, _compositionRepository);
 
             await service.GenerateAllCompositionsForRoomAsync(room, cts.Token);
 
@@ -209,7 +182,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
                     return Task.FromResult(storedEntity);
                 });
 
-            var service = new CompositionService(_roomConfigProvider, _compositionRepository, _connectionMultiplexer, _lockFactory);
+            var service = new CompositionService(_roomConfigProvider, _compositionRepository);
 
             await service.GenerateAllCompositionsForRoomAsync(room, cts.Token);
 
@@ -246,7 +219,7 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
 
             _compositionRepository.CompositionExistsAsync(room.Id, Arg.Any<string>()).Returns(Task.FromResult(true));
 
-            var service = new CompositionService(_roomConfigProvider, _compositionRepository, _connectionMultiplexer, _lockFactory);
+            var service = new CompositionService(_roomConfigProvider, _compositionRepository);
 
             await service.GenerateAllCompositionsForRoomAsync(room);
 
@@ -280,25 +253,8 @@ namespace BestiaryArenaCracker.ApplicationCore.Tests.Services.Composition
             _compositionRepository.GetMonstersByCompositionIdAsync(Arg.Any<int>()).Returns(Task.FromResult(Array.Empty<CompositionMonstersEntity>()));
             _compositionRepository.GetResultsCountAsync(Arg.Any<int>()).Returns(Task.FromResult(0));
 
-            var db = Substitute.For<IDatabase>();
-            var reservationCount = new Dictionary<int, int>();
-            db.StringSetAsync(Arg.Any<RedisKey>(), Arg.Any<RedisValue>(), Arg.Any<TimeSpan?>(), When.NotExists)
-                .Returns(call =>
-                {
-                    var key = (string)call.ArgAt<RedisKey>(0);
-                    var id = int.Parse(key.Split(':')[1]);
-                    if (!reservationCount.ContainsKey(id))
-                    {
-                        reservationCount[id] = 1;
-                        return Task.FromResult(true);
-                    }
-                    reservationCount[id]++;
-                    return Task.FromResult(false);
-                });
-            _connectionMultiplexer.GetDatabase().Returns(db);
-
-            var service1 = new CompositionService(_roomConfigProvider, _compositionRepository, _connectionMultiplexer, _lockFactory);
-            var service2 = new CompositionService(_roomConfigProvider, _compositionRepository, _connectionMultiplexer, _lockFactory);
+            var service1 = new CompositionService(_roomConfigProvider, _compositionRepository);
+            var service2 = new CompositionService(_roomConfigProvider, _compositionRepository);
 
             var results = await Task.WhenAll(service1.FindCompositionAsync(), service2.FindCompositionAsync());
 
